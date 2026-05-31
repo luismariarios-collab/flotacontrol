@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FlotaControl — Gestión de Flota</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#0f1318;
+      --s1:#161c24;
+      --s2:#1e2632;
+      --s3:#26303e;
+      --s4:#2e3a4a;
+      --acc:#f97316;
+      --acc2:#ea580c;
+      --blue:#38bdf8;
+      --green:#34d399;
+      --red:#f87171;
+      --yellow:#fbbf24;
+      --txt:#e2e8f0;
+      --dim:#64748b;
+      --dim2:#94a3b8;
+      --brd:#1e2d3d;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;}
+    ::-webkit-scrollbar{width:6px;height:6px;}
+    ::-webkit-scrollbar-track{background:var(--s1);}
+    ::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px;}
+
+    /* ===== LOGIN ===== */
+    #login-screen{
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;
+      background:radial-gradient(ellipse at 60% 40%, #1a2535 0%, var(--bg) 70%);
+    }
+    .login-box{
+      background:var(--s1);border:1px solid var(--brd);border-radius:16px;
+      padding:48px 40px;width:100%;max-width:400px;
+      box-shadow:0 24px 60px rgba(0,0,0,.6);
+    }
+    .login-logo{text-align:center;margin-bottom:32px;}
+    .login-icon{
+      width:72px;height:72px;
+      background:linear-gradient(135deg,var(--acc),var(--acc2));
+      border-radius:18px;margin:0 auto 12px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:2rem;
+      box-shadow:0 8px 24px rgba(249,115,22,.35);
+      overflow:hidden;
+    }
+    .login-icon img{width:100%;height:100%;object-fit:cover;border-radius:18px;}
+    .login-title{font-family:'Oswald',sans-serif;font-size:1.8rem;font-weight:700;letter-spacing:1px;}
+    .login-title em{color:var(--acc);font-style:normal;}
+    .login-sub{font-size:.8rem;color:var(--dim2);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+    .lf-group{margin-bottom:16px;}
+    .lf-group label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:6px;}
+    .lf-group input{
+      width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:8px;
+      padding:11px 14px;color:var(--txt);font-family:'Source Sans 3',sans-serif;font-size:.95rem;
+      outline:none;transition:border-color .2s,box-shadow .2s;
+    }
+    .lf-group input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(249,115,22,.12);}
+    .btn-login{
+      width:100%;background:linear-gradient(135deg,var(--acc),var(--acc2));
+      color:#fff;border:none;border-radius:8px;padding:13px;
+      font-family:'Oswald',sans-serif;font-weight:700;font-size:1.05rem;
+      letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+      box-shadow:0 4px 16px rgba(249,115,22,.3);transition:all .15s;margin-top:8px;
+    }
+    .btn-login:hover{box-shadow:0 6px 20px rgba(249,115,22,.45);transform:translateY(-1px);}
+    .login-err{color:var(--red);font-size:.82rem;text-align:center;margin-top:10px;display:none;}
+    .login-hint{font-size:.72rem;color:var(--dim);text-align:center;margin-top:20px;line-height:1.6;}
+
+    /* ===== APP SHELL ===== */
+    #app{display:none;height:100vh;flex-direction:column;}
+
+    /* TOPBAR */
+    .topbar{
+      height:54px;background:var(--s1);border-bottom:1px solid var(--brd);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 20px;flex-shrink:0;
+      box-shadow:0 2px 12px rgba(0,0,0,.4);
+      position:relative;z-index:10;
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px;}
+    .tb-icon{
+      width:34px;height:34px;background:linear-gradient(135deg,var(--acc),var(--acc2));
+      border-radius:8px;display:flex;align-items:center;justify-content:center;
+      font-size:1.1rem;overflow:hidden;flex-shrink:0;
+    }
+    .tb-icon img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
+    .tb-name{font-family:'Oswald',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:1px;}
+    .tb-name em{color:var(--acc);font-style:normal;}
+    .tb-right{display:flex;align-items:center;gap:16px;}
+    .tb-user{font-size:.82rem;color:var(--dim2);}
+    .tb-user span{color:var(--txt);font-weight:600;}
+    .btn-logout{
+      background:none;border:1px solid var(--brd);border-radius:6px;
+      color:var(--dim2);font-size:.75rem;font-family:'Oswald',sans-serif;
+      font-weight:600;letter-spacing:.5px;text-transform:uppercase;
+      padding:5px 12px;cursor:pointer;transition:all .15s;
+    }
+    .btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+    /* MAIN LAYOUT */
+    .main-layout{display:flex;flex:1;overflow:hidden;}
+
+    /* SIDEBAR */
+    .sidebar{
+      width:220px;background:var(--s1);border-right:1px solid var(--brd);
+      display:flex;flex-direction:column;flex-shrink:0;
+      padding:16px 0;
+    }
+    .nav-section{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);padding:0 16px;margin-bottom:6px;margin-top:16px;}
+    .nav-section:first-child{margin-top:0;}
+    .nav-item{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 16px;cursor:pointer;
+      font-size:.88rem;font-weight:500;color:var(--dim2);
+      border-left:3px solid transparent;transition:all .15s;
+      user-select:none;
+    }
+    .nav-item:hover{background:var(--s2);color:var(--txt);}
+    .nav-item.on{background:var(--s2);color:var(--acc);border-left-color:var(--acc);font-weight:600;}
+    .nav-item .ni{font-size:1rem;width:20px;text-align:center;}
+    .sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--brd);}
+    .backup-btn{
+      width:100%;background:none;border:1px solid var(--brd);border-radius:7px;
+      color:var(--dim2);font-size:.75rem;font-family:'Source Sans 3',sans-serif;
+      padding:8px;cursor:pointer;transition:all .15s;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+    }
+    .backup-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+    /* CONTENT AREA */
+    .content-area{flex:1;overflow-y:auto;padding:24px;background:var(--bg);}
+    .panel{display:none;}
+    .panel.on{display:block;}
+
+    /* PAGE HEADER */
+    .pg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+    .pg-title{font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:10px;}
+    .pg-title .pto{color:var(--acc);}
+
+    /* STATS ROW */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+    .stat-card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;}
+    .stat-card::after{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--acc);}
+    .stat-val{font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:700;color:var(--acc);line-height:1;}
+    .stat-lbl{font-size:.72rem;color:var(--dim2);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+    .stat-card.blue::after{background:var(--blue);}
+    .stat-card.blue .stat-val{color:var(--blue);}
+    .stat-card.green::after{background:var(--green);}
+    .stat-card.green .stat-val{color:var(--green);}
+    .stat-card.yellow::after{background:var(--yellow);}
+    .stat-card.yellow .stat-val{color:var(--yellow);}
+
+    /* TWO COL */
+    .two-col{display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start;}
+    .two-col-eq{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+
+    /* CARD */
+    .card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:18px;margin-bottom:16px;}
+    .card-title{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+    .card-title::after{content:'';flex:1;height:1px;background:var(--brd);}
+
+    /* FORM */
+    .fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+    .fg{margin-bottom:12px;}
+    .fg label{display:block;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--dim2);margin-bottom:5px;}
+    .fg input,.fg select{
+      width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:7px;
+      padding:8px 11px;color:var(--txt);font-family:'Source Sans 3',sans-serif;font-size:.9rem;
+      outline:none;transition:border-color .2s,box-shadow .2s;
+    }
+    .fg input:focus,.fg select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(249,115,22,.1);}
+    .fg select option{background:var(--s2);}
+    .hint-text{font-size:.68rem;color:var(--dim);margin-top:-8px;margin-bottom:8px;display:none;}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;border:none;font-family:'Oswald',sans-serif;font-weight:600;font-size:.88rem;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+    .btn-p{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 3px 10px rgba(249,115,22,.25);}
+    .btn-p:hover{box-shadow:0 5px 16px rgba(249,115,22,.4);transform:translateY(-1px);}
+    .btn-o{background:none;border:1px solid var(--brd);color:var(--dim2);}
+    .btn-o:hover{border-color:var(--acc);color:var(--acc);}
+    .btn-del{background:none;border:none;color:var(--dim);font-size:.78rem;font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;padding:4px 8px;border-radius:5px;}
+    .btn-del:hover{color:var(--red);background:rgba(248,113,113,.1);}
+
+    /* TABLE */
+    .tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--brd);}
+    table{width:100%;border-collapse:collapse;font-size:.85rem;}
+    thead tr{background:var(--s2);}
+    thead th{padding:11px 14px;text-align:left;font-family:'Oswald',sans-serif;font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);border-bottom:1px solid var(--brd);white-space:nowrap;}
+    tbody tr{border-bottom:1px solid var(--brd);transition:background .12s;}
+    tbody tr:last-child{border-bottom:none;}
+    tbody tr:hover{background:var(--s2);}
+    tbody td{padding:10px 14px;vertical-align:middle;}
+    .td-ruta{font-weight:600;white-space:nowrap;}
+    .td-arr{color:var(--acc);margin:0 4px;font-size:.8rem;}
+    .td-monto{font-family:'Oswald',sans-serif;font-weight:700;font-size:.95rem;color:var(--acc);white-space:nowrap;}
+    .td-dim{color:var(--dim2);font-size:.8rem;}
+    .td-rend{color:var(--yellow);font-family:'Oswald',sans-serif;font-weight:600;}
+    .tag{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
+    .tag-cam{background:rgba(56,189,248,.1);color:var(--blue);}
+
+    /* GASTOS INLINE */
+    .gi-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+    .gi-row select{flex:0 0 130px;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:7px 8px;color:var(--txt);font-size:.85rem;font-family:'Source Sans 3',sans-serif;outline:none;}
+    .gi-row input{flex:1;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:7px 10px;color:var(--txt);font-size:.9rem;font-family:'Source Sans 3',sans-serif;outline:none;}
+    .xbtn{width:28px;height:28px;background:none;border:1px solid var(--brd);border-radius:6px;color:var(--dim);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .xbtn:hover{color:var(--red);border-color:var(--red);}
+
+    /* RESUMEN CAM */
+    .rc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .rc-card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;overflow:hidden;}
+    .rc-head{background:var(--s2);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--brd);}
+    .rc-pat{font-family:'Oswald',sans-serif;font-weight:700;font-size:1rem;color:var(--acc);}
+    .rc-tot{font-family:'Oswald',sans-serif;font-weight:700;font-size:.95rem;color:var(--txt);}
+    .rc-body{padding:12px 14px;}
+    .rc-row{display:flex;justify-content:space-between;font-size:.8rem;padding:3px 0;border-bottom:1px solid var(--brd);}
+    .rc-row:last-child{border-bottom:none;}
+    .rc-row strong{font-family:'Oswald',sans-serif;font-size:.88rem;}
+
+    /* CAMIONES LIST */
+    .cam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .cam-card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:16px;position:relative;}
+    .cam-pat{font-family:'Oswald',sans-serif;font-weight:700;font-size:1.1rem;color:var(--acc);letter-spacing:1px;margin-bottom:4px;}
+    .cam-info{font-size:.78rem;color:var(--dim2);margin-bottom:2px;}
+    .cam-stat{font-size:.78rem;color:var(--blue);margin-top:8px;}
+    .cam-del{position:absolute;top:10px;right:10px;}
+
+    /* MODAL DETALLE */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+    .modal-bg.on{display:flex;}
+    .modal{background:var(--s1);border:1px solid var(--brd);border-radius:12px;padding:24px;width:100%;max-width:520px;max-height:80vh;overflow-y:auto;}
+    .modal-title{font-family:'Oswald',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:16px;color:var(--acc);display:flex;justify-content:space-between;align-items:center;}
+    .modal-close{background:none;border:none;color:var(--dim2);font-size:1.2rem;cursor:pointer;}
+    .modal-close:hover{color:var(--red);}
+    .drow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--brd);font-size:.85rem;}
+    .drow:last-child{border-bottom:none;}
+    .drow.tot{font-weight:700;color:var(--acc);font-size:.95rem;}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;transform:translateY(80px);opacity:0;background:var(--green);color:#000;font-family:'Oswald',sans-serif;font-weight:700;font-size:.95rem;padding:10px 22px;border-radius:8px;z-index:999;transition:all .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+    .toast.on{transform:translateY(0);opacity:1;}
+
+    /* EMPTY */
+    .empty{text-align:center;padding:40px;color:var(--dim);}
+    .empty .ei{font-size:2rem;margin-bottom:8px;}
+
+    /* CHANGE PASSWORD */
+    .pwd-card{max-width:400px;}
+  </style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-icon" id="loginIcon">🚛</div>
+      <div class="login-title">Flota<em>Control</em></div>
+      <div class="login-sub">Sistema de gestión de flota</div>
+    </div>
+    <div class="lf-group">
+      <label>Usuario</label>
+      <input id="l-user" type="text" placeholder="Ingresá tu usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="lf-group">
+      <label>Contraseña</label>
+      <input id="l-pass" type="password" placeholder="Ingresá tu contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Ingresar al sistema</button>
+    <div class="login-err" id="l-err">Usuario o contraseña incorrectos.</div>
+    <div class="login-hint">Usuario por defecto: <strong>admin</strong><br/>Contraseña por defecto: <strong>flota123</strong><br/><small>Podés cambiarlos desde Configuración</small></div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" style="display:none;height:100vh;display:none;flex-direction:column;">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="tb-icon" id="tbIcon">🚛</div>
+      <div>
+        <div class="tb-name">Flota<em>Control</em></div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-user">Bienvenido, <span id="tb-uname"></span></div>
+      <button class="btn-logout" onclick="doLogout()">⎋ Salir</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item on" onclick="goPanel('dashboard',this)"><span class="ni">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="goPanel('viajes',this)"><span class="ni">🗺️</span>Viajes</div>
+      <div class="nav-item" onclick="goPanel('camiones',this)"><span class="ni">🚛</span>Camiones</div>
+      <div class="nav-section">Informes</div>
+      <div class="nav-item" onclick="goPanel('resumen',this)"><span class="ni">📈</span>Resumen por camión</div>
+      <div class="nav-section">Sistema</div>
+      <div class="nav-item" onclick="goPanel('config',this)"><span class="ni">⚙️</span>Configuración</div>
+      <div class="sidebar-bottom">
+        <button class="backup-btn" onclick="exportData()">💾 Exportar backup</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content-area">
+
+      <!-- DASHBOARD -->
+      <div id="panel-dashboard" class="panel on">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">📊</span>Dashboard</div>
+          <div style="font-size:.8rem;color:var(--dim2)" id="dash-date"></div>
+        </div>
+        <div class="stats-row" id="dash-stats"></div>
+        <div class="two-col-eq">
+          <div>
+            <div class="card-title" style="font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:12px;display:flex;align-items:center;gap:7px;">🗺️ Últimos viajes <span style="flex:1;height:1px;background:var(--brd);display:block"></span></div>
+            <div id="dash-viajes"></div>
+          </div>
+          <div>
+            <div class="card-title" style="font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:12px;display:flex;align-items:center;gap:7px;">🚛 Camiones activos <span style="flex:1;height:1px;background:var(--brd);display:block"></span></div>
+            <div id="dash-cams"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIAJES -->
+      <div id="panel-viajes" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">🗺️</span>Viajes</div>
+          <button class="btn btn-p" onclick="showNuevoViaje()">+ Nuevo Viaje</button>
+        </div>
+
+        <!-- FORM NUEVO VIAJE (oculto por defecto) -->
+        <div id="form-viaje" style="display:none;margin-bottom:20px;">
+          <div class="card">
+            <div class="card-title">Registrar nuevo viaje</div>
+            <div class="fr3">
+              <div class="fg"><label>Camión</label>
+                <select id="vc" onchange="calcL()"><option value="">— Seleccionar —</option></select>
+              </div>
+              <div class="fg"><label>Fecha</label><input id="vf" type="date"/></div>
+              <div class="fg"><label>Kilómetros</label><input id="vk" type="number" placeholder="0" min="0" oninput="calcL()"/></div>
+            </div>
+            <div class="fr2">
+              <div class="fg"><label>Origen (punto de carga)</label><input id="vo" type="text" placeholder="Ciudad / localidad"/></div>
+              <div class="fg"><label>Destino</label><input id="vd" type="text" placeholder="Ciudad / localidad"/></div>
+            </div>
+            <div class="fr3">
+              <div class="fg">
+                <label>Litros de gasoil</label>
+                <input id="vl" type="number" placeholder="Auto / manual" step=".1" min="0"/>
+                <div class="hint-text" id="rhint">💡 Calculado por rendimiento. Podés modificarlo.</div>
+              </div>
+              <div class="fg"><label>Adelanto al chofer ($)</label><input id="va" type="number" placeholder="0.00" min="0"/></div>
+              <div class="fg"><label>Observaciones</label><input id="vobs" type="text" placeholder="Notas del viaje"/></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--dim2)">Gastos del viaje</span>
+              <button class="btn btn-o" style="padding:5px 12px;font-size:.78rem" onclick="addGF()">+ Agregar gasto</button>
+            </div>
+            <div id="gfl"></div>
+            <div style="display:flex;gap:10px;margin-top:8px">
+              <button class="btn btn-p" onclick="saveViaje()">✓ Guardar Viaje</button>
+              <button class="btn btn-o" onclick="hideNuevoViaje()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTROS + TABLA -->
+        <div class="card" style="padding:14px 16px;margin-bottom:12px">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px">
+              <label style="font-size:.72rem;color:var(--dim2);text-transform:uppercase;letter-spacing:.5px">Camión</label>
+              <select id="ftcam" onchange="renderViajes()" style="background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:6px 10px;color:var(--txt);font-size:.85rem;outline:none;">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <label style="font-size:.72rem;color:var(--dim2);text-transform:uppercase;letter-spacing:.5px">Mes</label>
+              <select id="ftmes" onchange="renderViajes()" style="background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:6px 10px;color:var(--txt);font-size:.85rem;outline:none;">
+                <option value="">Todos</option>
+                <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option>
+                <option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option>
+                <option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+              </select>
+            </div>
+            <div style="margin-left:auto;font-size:.8rem;color:var(--dim2)" id="viajes-count"></div>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Camión</th>
+                <th>Ruta</th>
+                <th>Km</th>
+                <th>Gasoil</th>
+                <th>Rend.</th>
+                <th>Adelanto</th>
+                <th>Gastos</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-viajes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CAMIONES -->
+      <div id="panel-camiones" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">🚛</span>Camiones</div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Registrar camión</div>
+            <div class="fr2">
+              <div class="fg"><label>Patente</label><input id="cp" type="text" placeholder="ABC 123"/></div>
+              <div class="fg"><label>Rendimiento (km/L)</label><input id="cr" type="number" placeholder="Ej: 3.5" step=".1" min="0"/></div>
+            </div>
+            <div class="fr2">
+              <div class="fg"><label>Modelo</label><input id="cm2" type="text" placeholder="Ej: Scania R420"/></div>
+              <div class="fg"><label>Chofer asignado</label><input id="cc" type="text" placeholder="Nombre"/></div>
+            </div>
+            <button class="btn btn-p" onclick="addCam()">+ Agregar Camión</button>
+          </div>
+          <div>
+            <div class="cam-grid" id="cam-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESUMEN -->
+      <div id="panel-resumen" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">📈</span>Resumen por camión</div>
+        </div>
+        <div class="stats-row" id="res-stats"></div>
+        <div class="rc-grid" id="rc-grid"></div>
+      </div>
+
+      <!-- CONFIG -->
+      <div id="panel-config" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">⚙️</span>Configuración</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start">
+          <div class="card pwd-card">
+            <div class="card-title">Cambiar contraseña</div>
+            <div class="fg"><label>Usuario actual</label><input id="cfg-user" type="text" placeholder="Nuevo usuario"/></div>
+            <div class="fg"><label>Contraseña nueva</label><input id="cfg-p1" type="password" placeholder="Nueva contraseña"/></div>
+            <div class="fg"><label>Repetir contraseña</label><input id="cfg-p2" type="password" placeholder="Repetir contraseña"/></div>
+            <button class="btn btn-p" onclick="saveConfig()">Guardar cambios</button>
+            <div id="cfg-msg" style="font-size:.8rem;margin-top:10px;display:none"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Backup de datos</div>
+            <p style="font-size:.85rem;color:var(--dim2);margin-bottom:14px;line-height:1.6">
+              Los datos se guardan en este navegador. Se recomienda exportar un backup periódicamente para no perder información.
+            </p>
+            <button class="btn btn-p" onclick="exportData()" style="margin-bottom:10px">💾 Exportar backup (JSON)</button>
+            <br/>
+            <div style="margin-top:12px">
+              <label style="font-size:.7rem;color:var(--dim2);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px">Restaurar desde backup</label>
+              <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="font-size:.82rem;color:var(--dim2)"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /main-layout -->
+</div><!-- /app -->
+
+<!-- MODAL DETALLE VIAJE -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Detalle del viaje</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CREDENTIALS
+// ============================================================
+function getCreds(){return JSON.parse(localStorage.getItem('fc_creds')||'{"user":"admin","pass":"flota123"}')}
+function saveCreds(c){localStorage.setItem('fc_creds',JSON.stringify(c));}
+
+// ============================================================
+// DATA
+// ============================================================
+let D=JSON.parse(localStorage.getItem('fc_data2')||'{"camiones":[],"viajes":[]}');
+function save(){localStorage.setItem('fc_data2',JSON.stringify(D));}
+
+// ============================================================
+// LOGIN
+// ============================================================
+function doLogin(){
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  const c=getCreds();
+  if(u===c.user&&p===c.pass){
+    document.getElementById('login-screen').style.display='none';
+    const app=document.getElementById('app');
+    app.style.display='flex';
+    document.getElementById('tb-uname').textContent=u;
+    renderDashboard();
+  } else {
+    const e=document.getElementById('l-err');
+    e.style.display='block';
+    setTimeout(()=>e.style.display='none',3000);
+  }
+}
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('l-pass').value='';
+  document.getElementById('l-user').value='';
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function goPanel(p,el){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('on'));
+  document.getElementById('panel-'+p).classList.add('on');
+  el.classList.add('on');
+  if(p==='dashboard')renderDashboard();
+  if(p==='viajes'){syncSel();renderViajes();}
+  if(p==='camiones')renderCamiones();
+  if(p==='resumen')renderResumen();
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg,color){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=color||'var(--green)';
+  t.style.color=color?'#fff':'#000';
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2500);
+}
+
+// ============================================================
+// CAMIONES
+// ============================================================
+function addCam(){
+  const p=document.getElementById('cp').value.trim().toUpperCase();
+  const r=parseFloat(document.getElementById('cr').value)||0;
+  const m=document.getElementById('cm2').value.trim();
+  const c=document.getElementById('cc').value.trim();
+  if(!p){alert('Ingresá la patente.');return;}
+  if(D.camiones.find(x=>x.patente===p)){alert('Ya existe un camión con esa patente.');return;}
+  D.camiones.push({id:Date.now(),patente:p,rend:r,modelo:m,chofer:c});
+  save(); renderCamiones(); syncSel(); toast('✅ Camión registrado');
+  ['cp','cr','cm2','cc'].forEach(id=>document.getElementById(id).value='');
+}
+function delCam(id){
+  if(!confirm('¿Eliminar este camión y todos sus viajes?'))return;
+  D.camiones=D.camiones.filter(x=>x.id!==id);
+  D.viajes=D.viajes.filter(x=>x.cid!==id);
+  save(); renderCamiones(); syncSel(); toast('🗑️ Camión eliminado','var(--red)');
+}
+function renderCamiones(){
+  const el=document.getElementById('cam-grid');
+  if(!D.camiones.length){
+    el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🚛</div>Sin camiones aún.</div>';
+    return;
+  }
+  el.innerHTML=D.camiones.map(c=>{
+    const vs=D.viajes.filter(v=>v.cid===c.id);
+    const tot=vs.reduce((s,v)=>s+tvTot(v),0);
+    return `<div class="cam-card">
+      <div class="cam-del"><button class="btn-del" onclick="delCam(${c.id})">✕</button></div>
+      <div class="cam-pat">🚛 ${c.patente}</div>
+      ${c.modelo?`<div class="cam-info">${c.modelo}</div>`:''}
+      ${c.chofer?`<div class="cam-info">👤 ${c.chofer}</div>`:''}
+      ${c.rend?`<div class="cam-info">⛽ ${c.rend} km/L</div>`:''}
+      <div class="cam-stat">$${tot.toLocaleString('es-AR')} · ${vs.length} viaje(s)</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// VIAJES
+// ============================================================
+let gfRows=[];
+function showNuevoViaje(){document.getElementById('form-viaje').style.display='block';syncSel();}
+function hideNuevoViaje(){document.getElementById('form-viaje').style.display='none';}
+function addGF(){gfRows.push({id:Date.now()});renderGF();}
+function delGF(id){gfRows=gfRows.filter(x=>x.id!==id);renderGF();}
+function renderGF(){
+  const el=document.getElementById('gfl');
+  if(!gfRows.length){el.innerHTML='';return;}
+  el.innerHTML=gfRows.map(f=>`
+    <div class="gi-row">
+      <select id="gt-${f.id}"><option>Peaje</option><option>Viáticos</option><option>Neumáticos</option><option>Reparación</option><option>Estadía</option><option>Comida</option><option>Otro</option></select>
+      <input id="gm-${f.id}" type="number" placeholder="$0.00" min="0"/>
+      <button class="xbtn" onclick="delGF(${f.id})">✕</button>
+    </div>`).join('');
+}
+function getGastos(){
+  return gfRows.map(f=>({tipo:document.getElementById('gt-'+f.id)?.value||'',monto:parseFloat(document.getElementById('gm-'+f.id)?.value)||0})).filter(g=>g.monto>0);
+}
+function syncSel(){
+  const o=D.camiones.map(c=>`<option value="${c.id}">${c.patente}${c.chofer?' – '+c.chofer:''}</option>`).join('');
+  const vc=document.getElementById('vc');
+  const ft=document.getElementById('ftcam');
+  if(vc)vc.innerHTML='<option value="">— Seleccionar —</option>'+o;
+  if(ft)ft.innerHTML='<option value="">Todos</option>'+o;
+}
+function calcL(){
+  const cid=parseInt(document.getElementById('vc')?.value);
+  const km=parseFloat(document.getElementById('vk')?.value)||0;
+  const cam=D.camiones.find(c=>c.id===cid);
+  const hint=document.getElementById('rhint');
+  if(cam&&cam.rend>0&&km>0){
+    document.getElementById('vl').value=(km/cam.rend).toFixed(1);
+    if(hint)hint.style.display='block';
+  } else {if(hint)hint.style.display='none';}
+}
+function saveViaje(){
+  const cid=parseInt(document.getElementById('vc').value);
+  const f=document.getElementById('vf').value;
+  const o=document.getElementById('vo').value.trim();
+  const d=document.getElementById('vd').value.trim();
+  const km=parseFloat(document.getElementById('vk').value)||0;
+  const lt=parseFloat(document.getElementById('vl').value)||0;
+  const adv=parseFloat(document.getElementById('va').value)||0;
+  const obs=document.getElementById('vobs').value.trim();
+  const gs=getGastos();
+  if(!cid){alert('Seleccioná un camión.');return;}
+  if(!f){alert('Ingresá la fecha.');return;}
+  if(!o||!d){alert('Ingresá origen y destino.');return;}
+  D.viajes.push({id:Date.now(),cid,f,o,d,km,lt,adv,gs,obs});
+  save();
+  ['vk','vl','va','vobs','vo','vd'].forEach(id=>document.getElementById(id).value='');
+  gfRows=[];renderGF();
+  document.getElementById('rhint').style.display='none';
+  hideNuevoViaje(); renderViajes(); renderDashboard();
+  toast('✅ Viaje guardado correctamente');
+}
+function delViaje(id){
+  if(!confirm('¿Eliminar este viaje?'))return;
+  D.viajes=D.viajes.filter(v=>v.id!==id);
+  save(); renderViajes(); renderDashboard(); toast('🗑️ Viaje eliminado','var(--red)');
+}
+function tvTot(v){return((v.gs||[]).reduce((s,g)=>s+g.monto,0))+(v.adv||0);}
+const TICO={Peaje:'🛣️','Viáticos':'🍽️','Neumáticos':'🔵',Reparación:'🔧',Estadía:'🏨',Comida:'🥗',Otro:'📦'};
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function renderViajes(){
+  syncSel();
+  const fc=document.getElementById('ftcam')?.value||'';
+  const fm=document.getElementById('ftmes')?.value||'';
+  let vs=[...D.viajes].sort((a,b)=>b.f.localeCompare(a.f));
+  if(fc)vs=vs.filter(v=>v.cid==fc);
+  if(fm)vs=vs.filter(v=>parseInt(v.f.split('-')[1])-1===MESES.indexOf(fm));
+  const tbody=document.getElementById('tbody-viajes');
+  const cnt=document.getElementById('viajes-count');
+  if(cnt)cnt.textContent=vs.length+' viaje(s) encontrado(s)';
+  if(!vs.length){
+    tbody.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ei">🗺️</div>No hay viajes registrados.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=vs.map(v=>{
+    const cam=D.camiones.find(c=>c.id===v.cid);
+    const pat=cam?cam.patente:'?';
+    const tot=tvTot(v);
+    const rr=(v.km&&v.lt)?(v.km/v.lt).toFixed(1):'—';
+    const sumG=(v.gs||[]).reduce((s,g)=>s+g.monto,0);
+    return `<tr>
+      <td class="td-dim">${fmt(v.f)}</td>
+      <td><span class="tag tag-cam">${pat}</span></td>
+      <td class="td-ruta"><span>${v.o}</span><span class="td-arr">→</span><span>${v.d}</span></td>
+      <td class="td-dim">${v.km?v.km.toLocaleString('es-AR'):'—'}</td>
+      <td class="td-dim">${v.lt?v.lt+'L':'—'}</td>
+      <td class="td-rend">${rr}</td>
+      <td class="td-dim">${v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—'}</td>
+      <td class="td-dim">${sumG>0?'$'+sumG.toLocaleString('es-AR'):'—'}</td>
+      <td class="td-monto">$${tot.toLocaleString('es-AR')}</td>
+      <td><button class="btn-del" onclick="showDetalle(${v.id})">Ver</button> <button class="btn-del" onclick="delViaje(${v.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// MODAL DETALLE
+function showDetalle(id){
+  const v=D.viajes.find(x=>x.id===id);
+  if(!v)return;
+  const cam=D.camiones.find(c=>c.id===v.cid);
+  const pat=cam?cam.patente:'?';
+  const tot=tvTot(v);
+  const rr=(v.km&&v.lt)?(v.km/v.lt).toFixed(1)+' km/L':'—';
+  const gRows=(v.gs||[]).map(g=>`<div class="drow"><span>${TICO[g.tipo]||'📦'} ${g.tipo}</span><span>$${g.monto.toLocaleString('es-AR')}</span></div>`).join('');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="drow"><span>📅 Fecha</span><span>${fmt(v.f)}</span></div>
+    <div class="drow"><span>🚛 Camión</span><span>${pat}${cam?.chofer?' — '+cam.chofer:''}</span></div>
+    <div class="drow"><span>📍 Origen</span><span>${v.o}</span></div>
+    <div class="drow"><span>🏁 Destino</span><span>${v.d}</span></div>
+    <div class="drow"><span>📏 Kilómetros</span><span>${v.km?v.km.toLocaleString('es-AR')+' km':'—'}</span></div>
+    <div class="drow"><span>⛽ Gasoil</span><span>${v.lt?v.lt+' L':'—'}</span></div>
+    <div class="drow"><span>📈 Rendimiento real</span><span>${rr}</span></div>
+    <div class="drow"><span>💵 Adelanto chofer</span><span>${v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—'}</span></div>
+    ${gRows}
+    ${v.obs?`<div class="drow"><span>📝 Notas</span><span>${v.obs}</span></div>`:''}
+    <div class="drow tot"><span>TOTAL VIAJE</span><span>$${tot.toLocaleString('es-AR')}</span></div>`;
+  document.getElementById('modal-bg').classList.add('on');
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('on');}
+document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const now=new Date();
+  const dd=document.getElementById('dash-date');
+  if(dd)dd.textContent=now.toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const tkm=D.viajes.reduce((s,v)=>s+(v.km||0),0);
+  const tlt=D.viajes.reduce((s,v)=>s+(v.lt||0),0);
+  const ttot=D.viajes.reduce((s,v)=>s+tvTot(v),0);
+  const rp=tlt>0?(tkm/tlt).toFixed(1):'—';
+  const ds=document.getElementById('dash-stats');
+  if(ds)ds.innerHTML=`
+    <div class="stat-card"><div class="stat-val">$${abr(ttot)}</div><div class="stat-lbl">Total gastos</div></div>
+    <div class="stat-card blue"><div class="stat-val">${D.viajes.length}</div><div class="stat-lbl">Viajes registrados</div></div>
+    <div class="stat-card green"><div class="stat-val">${abr(tkm)} <small style="font-size:.85rem">km</small></div><div class="stat-lbl">Kilómetros totales</div></div>
+    <div class="stat-card yellow"><div class="stat-val">${rp} <small style="font-size:.8rem">km/L</small></div><div class="stat-lbl">Rendimiento prom.</div></div>`;
+  // últimos viajes
+  const dv=document.getElementById('dash-viajes');
+  const ult=[...D.viajes].sort((a,b)=>b.f.localeCompare(a.f)).slice(0,5);
+  if(dv){
+    if(!ult.length){dv.innerHTML='<div class="empty"><div class="ei">🗺️</div>Sin viajes aún.</div>';return;}
+    dv.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Ruta</th><th>Total</th></tr></thead><tbody>'+
+      ult.map(v=>{const cam=D.camiones.find(c=>c.id===v.cid);return`<tr><td class="td-dim">${fmt(v.f)}</td><td class="td-ruta">${v.o}<span class="td-arr">→</span>${v.d}<br><span class="td-dim">${cam?cam.patente:'?'}</span></td><td class="td-monto">$${tvTot(v).toLocaleString('es-AR')}</td></tr>`;}).join('')+
+    '</tbody></table></div>';
+  }
+  // camiones
+  const dc=document.getElementById('dash-cams');
+  if(dc){
+    if(!D.camiones.length){dc.innerHTML='<div class="empty"><div class="ei">🚛</div>Sin camiones.</div>';return;}
+    dc.innerHTML=D.camiones.map(c=>{
+      const vs=D.viajes.filter(v=>v.cid===c.id);
+      const tot=vs.reduce((s,v)=>s+tvTot(v),0);
+      return `<div style="background:var(--s1);border:1px solid var(--brd);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Oswald',sans-serif;font-weight:700;color:var(--acc)">${c.patente}</div>
+          <div style="font-size:.75rem;color:var(--dim2)">${c.chofer||'Sin chofer asignado'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:.95rem">$${tot.toLocaleString('es-AR')}</div>
+          <div style="font-size:.72rem;color:var(--dim2)">${vs.length} viaje(s)</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ============================================================
+// RESUMEN
+// ============================================================
+function renderResumen(){
+  const tkm=D.viajes.reduce((s,v)=>s+(v.km||0),0);
+  const tlt=D.viajes.reduce((s,v)=>s+(v.lt||0),0);
+  const ttot=D.viajes.reduce((s,v)=>s+tvTot(v),0);
+  const tadv=D.viajes.reduce((s,v)=>s+(v.adv||0),0);
+  const rs=document.getElementById('res-stats');
+  if(rs)rs.innerHTML=`
+    <div class="stat-card"><div class="stat-val">$${abr(ttot)}</div><div class="stat-lbl">Total gastos</div></div>
+    <div class="stat-card blue"><div class="stat-val">${D.camiones.length}</div><div class="stat-lbl">Camiones</div></div>
+    <div class="stat-card green"><div class="stat-val">${abr(tkm)} <small style="font-size:.85rem">km</small></div><div class="stat-lbl">Km totales</div></div>
+    <div class="stat-card yellow"><div class="stat-val">$${abr(tadv)}</div><div class="stat-lbl">Adelantos totales</div></div>`;
+  const el=document.getElementById('rc-grid');
+  if(!D.camiones.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">📈</div>Sin datos aún.</div>';return;}
+  el.innerHTML=D.camiones.map(c=>{
+    const vs=D.viajes.filter(v=>v.cid===c.id);
+    const km=vs.reduce((s,v)=>s+(v.km||0),0);
+    const lt=vs.reduce((s,v)=>s+(v.lt||0),0);
+    const tot=vs.reduce((s,v)=>s+tvTot(v),0);
+    const adv=vs.reduce((s,v)=>s+(v.adv||0),0);
+    const rr=lt>0?(km/lt).toFixed(1):'—';
+    const pt={};
+    vs.forEach(v=>(v.gs||[]).forEach(g=>{pt[g.tipo]=(pt[g.tipo]||0)+g.monto;}));
+    const tr2=Object.entries(pt).map(([t,m])=>`<div class="rc-row"><span>${TICO[t]||'📦'} ${t}</span><strong>$${m.toLocaleString('es-AR')}</strong></div>`).join('');
+    return `<div class="rc-card">
+      <div class="rc-head">
+        <div><div class="rc-pat">🚛 ${c.patente}</div>${c.chofer?`<div style="font-size:.72rem;color:var(--dim2)">👤 ${c.chofer}</div>`:''}</div>
+        <div class="rc-tot">$${tot.toLocaleString('es-AR')}</div>
+      </div>
+      <div class="rc-body">
+        <div class="rc-row"><span>📍 Km recorridos</span><strong>${km.toLocaleString('es-AR')} km</strong></div>
+        <div class="rc-row"><span>⛽ Gasoil</span><strong>${lt.toLocaleString('es-AR')} L</strong></div>
+        <div class="rc-row"><span>📈 Rendimiento</span><strong>${rr} km/L</strong></div>
+        <div class="rc-row"><span>💵 Adelantos</span><strong>$${adv.toLocaleString('es-AR')}</strong></div>
+        <div class="rc-row"><span>🗺️ Viajes</span><strong>${vs.length}</strong></div>
+        ${tr2}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CONFIG
+// ============================================================
+function saveConfig(){
+  const u=document.getElementById('cfg-user').value.trim();
+  const p1=document.getElementById('cfg-p1').value;
+  const p2=document.getElementById('cfg-p2').value;
+  const msg=document.getElementById('cfg-msg');
+  if(!u){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Ingresá el nombre de usuario.';return;}
+  if(!p1){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Ingresá la nueva contraseña.';return;}
+  if(p1!==p2){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Las contraseñas no coinciden.';return;}
+  saveCreds({user:u,pass:p1});
+  msg.style.display='block';msg.style.color='var(--green)';msg.textContent='✅ Credenciales actualizadas correctamente.';
+  document.getElementById('tb-uname').textContent=u;
+  ['cfg-user','cfg-p1','cfg-p2'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ============================================================
+// BACKUP
+// ============================================================
+function exportData(){
+  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='flotacontrol-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  toast('💾 Backup exportado');
+}
+function importData(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d.camiones||!d.viajes)throw new Error();
+      if(!confirm(`¿Restaurar backup? Se cargarán ${d.camiones.length} camiones y ${d.viajes.length} viajes. Los datos actuales serán reemplazados.`))return;
+      D=d; save(); renderDashboard();
+      toast('✅ Backup restaurado correctamente');
+    }catch{alert('Archivo inválido.');}
+  };
+  r.readAsText(file);
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function fmt(f){if(!f)return'';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`;}
+function abr(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(0)+'K';return Math.round(n).toLocaleString('es-AR');}
+
+// INIT
+document.getElementById('vf').valueAsDate=new Date();
+</script>
+</body>
+</html>
