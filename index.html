@@ -303,11 +303,14 @@
     <div class="sidebar">
       <div class="nav-section">Principal</div>
       <div class="nav-item on" onclick="goPanel('dashboard',this)"><span class="ni">📊</span>Dashboard</div>
+      <div class="nav-section">Operaciones</div>
       <div class="nav-item" onclick="goPanel('viajes',this)"><span class="ni">🗺️</span>Viajes</div>
       <div class="nav-item" onclick="goPanel('camiones',this)"><span class="ni">🚛</span>Camiones</div>
-      <div class="nav-section">Tarifas y Liquidación</div>
       <div class="nav-item" onclick="goPanel('tarifas',this)"><span class="ni">💰</span>Tarifas de viaje</div>
       <div class="nav-item" onclick="goPanel('liquidacion',this)"><span class="ni">👷</span>Liquidación chofer</div>
+      <div class="nav-section">Gestión comercial</div>
+      <div class="nav-item" onclick="goPanel('clientes',this)"><span class="ni">🤝</span>Clientes</div>
+      <div class="nav-item" onclick="goPanel('proveedores',this)"><span class="ni">🏭</span>Proveedores</div>
       <div class="nav-section">Informes</div>
       <div class="nav-item" onclick="goPanel('resumen',this)"><span class="ni">📈</span>Resumen por camión</div>
       <div class="nav-item" onclick="goPanel('impresion',this)"><span class="ni">🖨️</span>Imprimir informes</div>
@@ -570,6 +573,127 @@
       </div>
 
 
+
+
+      <!-- CLIENTES -->
+      <div id="panel-clientes" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">🤝</span>Clientes</div>
+          <button class="btn btn-p" onclick="toggleFormCliente()">+ Nuevo Cliente</button>
+        </div>
+        <div id="form-cliente" style="display:none;margin-bottom:20px;">
+          <div class="card">
+            <div class="card-title">Registrar cliente</div>
+            <div class="fr2">
+              <div class="fg"><label>Nombre / Empresa</label><input id="cl-nom" type="text" placeholder="Razón social o nombre"/></div>
+              <div class="fg"><label>Tipo</label><select id="cl-tipo"><option>Empresa</option><option>Particular</option></select></div>
+            </div>
+            <div class="fr3">
+              <div class="fg"><label>CUIT / DNI</label><input id="cl-cuit" type="text" placeholder="20-12345678-9"/></div>
+              <div class="fg"><label>Teléfono</label><input id="cl-tel" type="text" placeholder="11 1234-5678"/></div>
+              <div class="fg"><label>Email</label><input id="cl-email" type="text" placeholder="correo@empresa.com"/></div>
+            </div>
+            <div class="fg"><label>Dirección</label><input id="cl-dir" type="text" placeholder="Calle, ciudad"/></div>
+            <div class="fg"><label>Observaciones</label><input id="cl-obs" type="text" placeholder="Notas"/></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-p" onclick="addCliente()">Guardar cliente</button>
+              <button class="btn btn-o" onclick="toggleFormCliente()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lista-clientes"></div>
+      </div>
+
+      <!-- DETALLE CLIENTE -->
+      <div id="panel-cliente-det" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">🤝</span><span id="det-cl-nombre">Cliente</span></div>
+          <button class="btn btn-o" onclick="goPanel('clientes',document.querySelector('[onclick*=clientes]'))">← Volver</button>
+        </div>
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start">
+          <div>
+            <div class="card" id="det-cl-info" style="margin-bottom:12px"></div>
+            <div class="card">
+              <div class="card-title">Nuevo documento</div>
+              <div class="fg"><label>Tipo</label><select id="doc-tipo"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Recibo</option><option>Presupuesto</option><option>Otro</option></select></div>
+              <div class="fr2">
+                <div class="fg"><label>Número</label><input id="doc-num" type="text" placeholder="0001-00012345"/></div>
+                <div class="fg"><label>Fecha</label><input id="doc-fecha" type="date"/></div>
+              </div>
+              <div class="fr2">
+                <div class="fg"><label>Monto ($)</label><input id="doc-monto" type="number" placeholder="0.00" min="0"/></div>
+                <div class="fg"><label>Estado</label><select id="doc-estado"><option>Pendiente</option><option>Cobrado</option><option>Anulado</option></select></div>
+              </div>
+              <div class="fg"><label>Descripción</label><input id="doc-desc" type="text" placeholder="Detalle"/></div>
+              <button class="btn btn-p" onclick="addDocCliente()">+ Agregar documento</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-family:Oswald,sans-serif;font-size:.9rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:12px;display:flex;align-items:center;gap:8px;">Historial de documentos <span style="flex:1;height:1px;background:var(--brd);display:block"></span></div>
+            <div id="lista-docs-cliente"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROVEEDORES -->
+      <div id="panel-proveedores" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">🏭</span>Proveedores</div>
+          <button class="btn btn-p" onclick="toggleFormProveedor()">+ Nuevo Proveedor</button>
+        </div>
+        <div id="form-proveedor" style="display:none;margin-bottom:20px;">
+          <div class="card">
+            <div class="card-title">Registrar proveedor</div>
+            <div class="fr2">
+              <div class="fg"><label>Nombre / Empresa</label><input id="pv-nom" type="text" placeholder="Razón social"/></div>
+              <div class="fg"><label>Rubro</label><select id="pv-rubro"><option>Combustible</option><option>Neumáticos</option><option>Repuestos</option><option>Mecánica</option><option>Seguros</option><option>Peajes</option><option>Otro</option></select></div>
+            </div>
+            <div class="fr3">
+              <div class="fg"><label>CUIT</label><input id="pv-cuit" type="text" placeholder="20-12345678-9"/></div>
+              <div class="fg"><label>Teléfono</label><input id="pv-tel" type="text" placeholder="11 1234-5678"/></div>
+              <div class="fg"><label>Contacto</label><input id="pv-cont" type="text" placeholder="Nombre"/></div>
+            </div>
+            <div class="fg"><label>Observaciones</label><input id="pv-obs" type="text" placeholder="Notas"/></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-p" onclick="addProveedor()">Guardar proveedor</button>
+              <button class="btn btn-o" onclick="toggleFormProveedor()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lista-proveedores"></div>
+      </div>
+
+      <!-- DETALLE PROVEEDOR -->
+      <div id="panel-proveedor-det" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">🏭</span><span id="det-pv-nombre">Proveedor</span></div>
+          <button class="btn btn-o" onclick="goPanel('proveedores',document.querySelector('[onclick*=proveedores]'))">← Volver</button>
+        </div>
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start">
+          <div>
+            <div class="card" id="det-pv-info" style="margin-bottom:12px"></div>
+            <div class="card">
+              <div class="card-title">Nueva compra / documento</div>
+              <div class="fg"><label>Tipo</label><select id="pdoc-tipo"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Recibo</option><option>Ticket</option><option>Otro</option></select></div>
+              <div class="fr2">
+                <div class="fg"><label>Número</label><input id="pdoc-num" type="text" placeholder="0001-00012345"/></div>
+                <div class="fg"><label>Fecha</label><input id="pdoc-fecha" type="date"/></div>
+              </div>
+              <div class="fr2">
+                <div class="fg"><label>Monto ($)</label><input id="pdoc-monto" type="number" placeholder="0.00" min="0"/></div>
+                <div class="fg"><label>Estado</label><select id="pdoc-estado"><option>Pendiente</option><option>Pagado</option><option>Anulado</option></select></div>
+              </div>
+              <div class="fg"><label>Descripción</label><input id="pdoc-desc" type="text" placeholder="Qué se compró"/></div>
+              <button class="btn btn-p" onclick="addDocProveedor()">+ Agregar documento</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-family:Oswald,sans-serif;font-size:.9rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:12px;display:flex;align-items:center;gap:8px;">Historial de compras <span style="flex:1;height:1px;background:var(--brd);display:block"></span></div>
+            <div id="lista-docs-proveedor"></div>
+          </div>
+        </div>
+      </div>
+
   </div><!-- /main-layout -->
 </div><!-- /app -->
 
@@ -634,6 +758,8 @@ function goPanel(p,el){
   document.getElementById('panel-'+p).classList.add('on');
   el.classList.add('on');
   if(p==='tarifas'){renderTarifas();}
+  if(p==='clientes'){if(!D.clientes)D.clientes=[];renderClientes();}
+  if(p==='proveedores'){if(!D.proveedores)D.proveedores=[];renderProveedores();}
   if(p==='liquidacion'){syncLqCam();}
   if(p==='impresion'){syncLqCam();}
   if(p==='dashboard')renderDashboard();
@@ -975,6 +1101,8 @@ function addTarifa(){
   if(!o||!d){alert('Ingresá origen y destino.');return;}
   if(!p){alert('Ingresá el precio.');return;}
   if(!D.tarifas)D.tarifas=[];
+if(!D.clientes)D.clientes=[];
+if(!D.proveedores)D.proveedores=[];
   D.tarifas.push({id:Date.now(),o,d,p,m,obs});
   save(); renderTarifas();
   ['tf-o','tf-d','tf-p','tf-obs'].forEach(id=>document.getElementById(id).value='');
@@ -1152,6 +1280,242 @@ function imprimirLiquidacion(){
   <br><button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button>
   </body></html>`);
   w.document.close();
+}
+
+
+// ============================================================
+// CLIENTES
+// ============================================================
+function toggleFormCliente(){const f=document.getElementById('form-cliente');f.style.display=f.style.display==='none'?'block':'none';}
+function addCliente(){
+  const nom=document.getElementById('cl-nom').value.trim();
+  if(!nom){alert('Ingresá el nombre.');return;}
+  if(!D.clientes)D.clientes=[];
+  D.clientes.push({
+    id:Date.now(),
+    nom,
+    tipo:document.getElementById('cl-tipo').value,
+    cuit:document.getElementById('cl-cuit').value.trim(),
+    tel:document.getElementById('cl-tel').value.trim(),
+    email:document.getElementById('cl-email').value.trim(),
+    dir:document.getElementById('cl-dir').value.trim(),
+    obs:document.getElementById('cl-obs').value.trim(),
+    docs:[]
+  });
+  save(); renderClientes();
+  ['cl-nom','cl-cuit','cl-tel','cl-email','cl-dir','cl-obs'].forEach(id=>document.getElementById(id).value='');
+  toggleFormCliente(); toast('✅ Cliente guardado');
+}
+function delCliente(id){
+  if(!confirm('¿Eliminar este cliente y todos sus documentos?'))return;
+  D.clientes=D.clientes.filter(c=>c.id!==id);
+  save(); renderClientes(); toast('🗑️ Cliente eliminado','var(--red)');
+}
+function renderClientes(){
+  if(!D.clientes)D.clientes=[];
+  const el=document.getElementById('lista-clientes');
+  if(!el)return;
+  if(!D.clientes.length){el.innerHTML='<div class="empty"><div class="ei">🤝</div>Sin clientes registrados. Hacé clic en "+ Nuevo Cliente" para agregar.</div>';return;}
+  el.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>Nombre / Empresa</th><th>Tipo</th><th>CUIT/DNI</th><th>Teléfono</th><th>Documentos</th><th>Total facturado</th><th></th></tr></thead><tbody>'+
+    D.clientes.map(c=>{
+      const docs=c.docs||[];
+      const total=docs.reduce((s,d)=>s+(d.monto||0),0);
+      const pendientes=docs.filter(d=>d.estado==='Pendiente').length;
+      return`<tr>
+        <td><strong style="cursor:pointer;color:var(--acc)" onclick="abrirCliente(${c.id})">${c.nom}</strong>${c.dir?'<br><span class="td-dim">'+c.dir+'</span>':''}</td>
+        <td class="td-dim">${c.tipo}</td>
+        <td class="td-dim">${c.cuit||'—'}</td>
+        <td class="td-dim">${c.tel||'—'}</td>
+        <td>${docs.length} doc${docs.length!==1?'s':''}${pendientes>0?'<br><span style="color:var(--yellow);font-size:.72rem">'+pendientes+' pendiente(s)</span>':''}</td>
+        <td class="td-monto">$${total.toLocaleString('es-AR')}</td>
+        <td>
+          <button class="btn btn-o" style="padding:4px 10px;font-size:.75rem;margin-right:4px" onclick="abrirCliente(${c.id})">Ver</button>
+          <button class="btn-del" onclick="delCliente(${c.id})">✕</button>
+        </td>
+      </tr>`;
+    }).join('')+
+  '</tbody></table></div>';
+}
+let _clienteActivo=null;
+function abrirCliente(id){
+  const c=D.clientes.find(x=>x.id===id);
+  if(!c)return;
+  _clienteActivo=id;
+  document.getElementById('det-cl-nombre').textContent=c.nom;
+  document.getElementById('det-cl-info').innerHTML=`
+    <div class="card-title">Datos del cliente</div>
+    <div class="rc-row"><span>Tipo</span><strong>${c.tipo}</strong></div>
+    ${c.cuit?'<div class="rc-row"><span>CUIT/DNI</span><strong>'+c.cuit+'</strong></div>':''}
+    ${c.tel?'<div class="rc-row"><span>Teléfono</span><strong>'+c.tel+'</strong></div>':''}
+    ${c.email?'<div class="rc-row"><span>Email</span><strong>'+c.email+'</strong></div>':''}
+    ${c.dir?'<div class="rc-row"><span>Dirección</span><strong>'+c.dir+'</strong></div>':''}
+    ${c.obs?'<div class="rc-row"><span>Notas</span><strong>'+c.obs+'</strong></div>':''}`;
+  document.getElementById('doc-fecha').valueAsDate=new Date();
+  renderDocsCliente();
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('panel-cliente-det').classList.add('on');
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('on'));
+}
+function addDocCliente(){
+  const c=D.clientes.find(x=>x.id===_clienteActivo);
+  if(!c)return;
+  const monto=parseFloat(document.getElementById('doc-monto').value)||0;
+  const fecha=document.getElementById('doc-fecha').value;
+  if(!fecha){alert('Ingresá la fecha.');return;}
+  if(!c.docs)c.docs=[];
+  c.docs.push({
+    id:Date.now(),
+    tipo:document.getElementById('doc-tipo').value,
+    num:document.getElementById('doc-num').value.trim(),
+    fecha,monto,
+    estado:document.getElementById('doc-estado').value,
+    desc:document.getElementById('doc-desc').value.trim()
+  });
+  save(); renderDocsCliente();
+  ['doc-num','doc-monto','doc-desc'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Documento agregado');
+}
+function delDocCliente(docId){
+  const c=D.clientes.find(x=>x.id===_clienteActivo);
+  if(!c)return;
+  c.docs=c.docs.filter(d=>d.id!==docId);
+  save(); renderDocsCliente(); toast('🗑️ Documento eliminado','var(--red)');
+}
+function renderDocsCliente(){
+  const c=D.clientes.find(x=>x.id===_clienteActivo);
+  const el=document.getElementById('lista-docs-cliente');
+  if(!c||!el)return;
+  const docs=(c.docs||[]).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos aún.</div>';return;}
+  const total=docs.reduce((s,d)=>s+(d.monto||0),0);
+  const pendiente=docs.filter(d=>d.estado==='Pendiente').reduce((s,d)=>s+(d.monto||0),0);
+  el.innerHTML=`<div style="display:flex;gap:12px;margin-bottom:14px">
+    <div class="stat-card" style="flex:1"><div class="stat-val">$${abr(total)}</div><div class="stat-lbl">Total facturado</div></div>
+    <div class="stat-card yellow" style="flex:1"><div class="stat-val">$${abr(pendiente)}</div><div class="stat-lbl">Pendiente cobro</div></div>
+    <div class="stat-card blue" style="flex:1"><div class="stat-val">${docs.length}</div><div class="stat-lbl">Documentos</div></div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>`+
+  docs.map(d=>{
+    const sc=d.estado==='Cobrado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim2)';
+    return`<tr><td class="td-dim">${fmt(d.fecha)}</td><td>${d.tipo}</td><td class="td-dim">${d.num||'—'}</td><td class="td-dim">${d.desc||'—'}</td><td class="td-monto">$${(d.monto||0).toLocaleString('es-AR')}</td><td><span style="color:${sc};font-size:.8rem;font-weight:600">${d.estado}</span></td><td><button class="btn-del" onclick="delDocCliente(${d.id})">✕</button></td></tr>`;
+  }).join('')+
+  '</tbody></table></div>';
+}
+
+// ============================================================
+// PROVEEDORES
+// ============================================================
+function toggleFormProveedor(){const f=document.getElementById('form-proveedor');f.style.display=f.style.display==='none'?'block':'none';}
+function addProveedor(){
+  const nom=document.getElementById('pv-nom').value.trim();
+  if(!nom){alert('Ingresá el nombre.');return;}
+  if(!D.proveedores)D.proveedores=[];
+  D.proveedores.push({
+    id:Date.now(),nom,
+    rubro:document.getElementById('pv-rubro').value,
+    cuit:document.getElementById('pv-cuit').value.trim(),
+    tel:document.getElementById('pv-tel').value.trim(),
+    cont:document.getElementById('pv-cont').value.trim(),
+    obs:document.getElementById('pv-obs').value.trim(),
+    docs:[]
+  });
+  save(); renderProveedores();
+  ['pv-nom','pv-cuit','pv-tel','pv-cont','pv-obs'].forEach(id=>document.getElementById(id).value='');
+  toggleFormProveedor(); toast('✅ Proveedor guardado');
+}
+function delProveedor(id){
+  if(!confirm('¿Eliminar este proveedor?'))return;
+  D.proveedores=D.proveedores.filter(p=>p.id!==id);
+  save(); renderProveedores(); toast('🗑️ Proveedor eliminado','var(--red)');
+}
+function renderProveedores(){
+  if(!D.proveedores)D.proveedores=[];
+  const el=document.getElementById('lista-proveedores');
+  if(!el)return;
+  if(!D.proveedores.length){el.innerHTML='<div class="empty"><div class="ei">🏭</div>Sin proveedores registrados. Hacé clic en "+ Nuevo Proveedor" para agregar.</div>';return;}
+  el.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>Nombre / Empresa</th><th>Rubro</th><th>CUIT</th><th>Teléfono</th><th>Documentos</th><th>Total comprado</th><th></th></tr></thead><tbody>'+
+    D.proveedores.map(p=>{
+      const docs=p.docs||[];
+      const total=docs.reduce((s,d)=>s+(d.monto||0),0);
+      const pendientes=docs.filter(d=>d.estado==='Pendiente').length;
+      return`<tr>
+        <td><strong style="cursor:pointer;color:var(--acc)" onclick="abrirProveedor(${p.id})">${p.nom}</strong>${p.cont?'<br><span class="td-dim">'+p.cont+'</span>':''}</td>
+        <td class="td-dim">${p.rubro}</td>
+        <td class="td-dim">${p.cuit||'—'}</td>
+        <td class="td-dim">${p.tel||'—'}</td>
+        <td>${docs.length} doc${docs.length!==1?'s':''}${pendientes>0?'<br><span style="color:var(--yellow);font-size:.72rem">'+pendientes+' pendiente(s)</span>':''}</td>
+        <td class="td-monto">$${total.toLocaleString('es-AR')}</td>
+        <td>
+          <button class="btn btn-o" style="padding:4px 10px;font-size:.75rem;margin-right:4px" onclick="abrirProveedor(${p.id})">Ver</button>
+          <button class="btn-del" onclick="delProveedor(${p.id})">✕</button>
+        </td>
+      </tr>`;
+    }).join('')+
+  '</tbody></table></div>';
+}
+let _proveedorActivo=null;
+function abrirProveedor(id){
+  const p=D.proveedores.find(x=>x.id===id);
+  if(!p)return;
+  _proveedorActivo=id;
+  document.getElementById('det-pv-nombre').textContent=p.nom;
+  document.getElementById('det-pv-info').innerHTML=`
+    <div class="card-title">Datos del proveedor</div>
+    <div class="rc-row"><span>Rubro</span><strong>${p.rubro}</strong></div>
+    ${p.cuit?'<div class="rc-row"><span>CUIT</span><strong>'+p.cuit+'</strong></div>':''}
+    ${p.tel?'<div class="rc-row"><span>Teléfono</span><strong>'+p.tel+'</strong></div>':''}
+    ${p.cont?'<div class="rc-row"><span>Contacto</span><strong>'+p.cont+'</strong></div>':''}
+    ${p.obs?'<div class="rc-row"><span>Notas</span><strong>'+p.obs+'</strong></div>':''}`;
+  document.getElementById('pdoc-fecha').valueAsDate=new Date();
+  renderDocsProveedor();
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+  document.getElementById('panel-proveedor-det').classList.add('on');
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('on'));
+}
+function addDocProveedor(){
+  const p=D.proveedores.find(x=>x.id===_proveedorActivo);
+  if(!p)return;
+  const monto=parseFloat(document.getElementById('pdoc-monto').value)||0;
+  const fecha=document.getElementById('pdoc-fecha').value;
+  if(!fecha){alert('Ingresá la fecha.');return;}
+  if(!p.docs)p.docs=[];
+  p.docs.push({
+    id:Date.now(),
+    tipo:document.getElementById('pdoc-tipo').value,
+    num:document.getElementById('pdoc-num').value.trim(),
+    fecha,monto,
+    estado:document.getElementById('pdoc-estado').value,
+    desc:document.getElementById('pdoc-desc').value.trim()
+  });
+  save(); renderDocsProveedor();
+  ['pdoc-num','pdoc-monto','pdoc-desc'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Documento agregado');
+}
+function delDocProveedor(docId){
+  const p=D.proveedores.find(x=>x.id===_proveedorActivo);
+  if(!p)return;
+  p.docs=p.docs.filter(d=>d.id!==docId);
+  save(); renderDocsProveedor(); toast('🗑️ Documento eliminado','var(--red)');
+}
+function renderDocsProveedor(){
+  const p=D.proveedores.find(x=>x.id===_proveedorActivo);
+  const el=document.getElementById('lista-docs-proveedor');
+  if(!p||!el)return;
+  const docs=(p.docs||[]).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos aún.</div>';return;}
+  const total=docs.reduce((s,d)=>s+(d.monto||0),0);
+  const pendiente=docs.filter(d=>d.estado==='Pendiente').reduce((s,d)=>s+(d.monto||0),0);
+  el.innerHTML=`<div style="display:flex;gap:12px;margin-bottom:14px">
+    <div class="stat-card" style="flex:1"><div class="stat-val">$${abr(total)}</div><div class="stat-lbl">Total comprado</div></div>
+    <div class="stat-card yellow" style="flex:1"><div class="stat-val">$${abr(pendiente)}</div><div class="stat-lbl">Pendiente pago</div></div>
+    <div class="stat-card blue" style="flex:1"><div class="stat-val">${docs.length}</div><div class="stat-lbl">Documentos</div></div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>`+
+  docs.map(d=>{
+    const sc=d.estado==='Pagado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim2)';
+    return`<tr><td class="td-dim">${fmt(d.fecha)}</td><td>${d.tipo}</td><td class="td-dim">${d.num||'—'}</td><td class="td-dim">${d.desc||'—'}</td><td class="td-monto">$${(d.monto||0).toLocaleString('es-AR')}</td><td><span style="color:${sc};font-size:.8rem;font-weight:600">${d.estado}</span></td><td><button class="btn-del" onclick="delDocProveedor(${d.id})">✕</button></td></tr>`;
+  }).join('')+
+  '</tbody></table></div>';
 }
 
 </script>
