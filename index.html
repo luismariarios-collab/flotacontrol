@@ -305,8 +305,12 @@
       <div class="nav-item on" onclick="goPanel('dashboard',this)"><span class="ni">📊</span>Dashboard</div>
       <div class="nav-item" onclick="goPanel('viajes',this)"><span class="ni">🗺️</span>Viajes</div>
       <div class="nav-item" onclick="goPanel('camiones',this)"><span class="ni">🚛</span>Camiones</div>
+      <div class="nav-section">Tarifas y Liquidación</div>
+      <div class="nav-item" onclick="goPanel('tarifas',this)"><span class="ni">💰</span>Tarifas de viaje</div>
+      <div class="nav-item" onclick="goPanel('liquidacion',this)"><span class="ni">👷</span>Liquidación chofer</div>
       <div class="nav-section">Informes</div>
       <div class="nav-item" onclick="goPanel('resumen',this)"><span class="ni">📈</span>Resumen por camión</div>
+      <div class="nav-item" onclick="goPanel('impresion',this)"><span class="ni">🖨️</span>Imprimir informes</div>
       <div class="nav-section">Sistema</div>
       <div class="nav-item" onclick="goPanel('config',this)"><span class="ni">⚙️</span>Configuración</div>
       <div class="sidebar-bottom">
@@ -483,7 +487,89 @@
         </div>
       </div>
 
-    </div><!-- /content-area -->
+      <!-- TARIFAS -->
+      <div id="panel-tarifas" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">💰</span>Tarifas de viaje</div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Nueva tarifa por ruta</div>
+            <div class="fg"><label>Origen</label><input id="tf-o" type="text" placeholder="Ciudad de origen"/></div>
+            <div class="fg"><label>Destino</label><input id="tf-d" type="text" placeholder="Ciudad de destino"/></div>
+            <div class="fr2">
+              <div class="fg"><label>Precio base ($)</label><input id="tf-p" type="number" placeholder="0.00" min="0"/></div>
+              <div class="fg"><label>Moneda</label>
+                <select id="tf-m">
+                  <option value="ARS">Pesos ($)</option>
+                  <option value="USD">Dólares (U$D)</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg"><label>Observaciones</label><input id="tf-obs" type="text" placeholder="Ej: incluye descarga, precio por tonelada, etc."/></div>
+            <button class="btn btn-p" onclick="addTarifa()">+ Guardar Tarifa</button>
+          </div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:12px;display:flex;align-items:center;gap:8px;">Tarifas registradas <span style="flex:1;height:1px;background:var(--brd);display:block"></span></div>
+            <div id="lista-tarifas"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIQUIDACION CHOFER -->
+      <div id="panel-liquidacion" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">👷</span>Liquidación de chofer</div>
+        </div>
+        <div class="card" style="max-width:600px;margin-bottom:20px;">
+          <div class="card-title">Calcular liquidación</div>
+          <div class="fr3">
+            <div class="fg"><label>Chofer / Camión</label>
+              <select id="lq-cam"><option value="">— Seleccionar —</option></select>
+            </div>
+            <div class="fg"><label>Desde</label><input id="lq-desde" type="date"/></div>
+            <div class="fg"><label>Hasta</label><input id="lq-hasta" type="date"/></div>
+          </div>
+          <div style="font-family:'Oswald',sans-serif;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-bottom:10px;">Configuración de pago</div>
+          <div class="fr2">
+            <div class="fg"><label>Sueldo fijo ($)</label><input id="lq-fijo" type="number" placeholder="0.00" min="0"/></div>
+            <div class="fg"><label>% por viaje sobre tarifa</label><input id="lq-pct" type="number" placeholder="0" min="0" max="100" step="0.5"/></div>
+          </div>
+          <div class="fr2">
+            <div class="fg"><label>Monto fijo por viaje ($)</label><input id="lq-xviaje" type="number" placeholder="0.00" min="0"/></div>
+            <div class="fg"><label>Precio gasoil ($/L)</label><input id="lq-gasoil" type="number" placeholder="Ej: 1200" min="0"/></div>
+          </div>
+          <button class="btn btn-p" onclick="calcLiquidacion()">Calcular liquidación</button>
+        </div>
+        <div id="resultado-lq"></div>
+      </div>
+
+      <!-- IMPRESION -->
+      <div id="panel-impresion" class="panel">
+        <div class="pg-header">
+          <div class="pg-title"><span class="pto">🖨️</span>Imprimir informes</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+          <div class="card">
+            <div class="card-title">Resumen de viajes</div>
+            <div class="fg"><label>Camión (opcional)</label>
+              <select id="imp-cam"><option value="">Todos los camiones</option></select>
+            </div>
+            <div class="fr2">
+              <div class="fg"><label>Desde</label><input id="imp-desde" type="date"/></div>
+              <div class="fg"><label>Hasta</label><input id="imp-hasta" type="date"/></div>
+            </div>
+            <button class="btn btn-p" onclick="imprimirViajes()">🖨️ Imprimir resumen</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Resumen por camión</div>
+            <p style="font-size:.85rem;color:var(--dim2);margin-bottom:14px;line-height:1.6">Imprime el resumen completo de todos los camiones con km, gasoil, gastos y totales.</p>
+            <button class="btn btn-p" onclick="imprimirResumen()">🖨️ Imprimir por camión</button>
+          </div>
+        </div>
+      </div>
+
+
   </div><!-- /main-layout -->
 </div><!-- /app -->
 
@@ -547,6 +633,9 @@ function goPanel(p,el){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('on'));
   document.getElementById('panel-'+p).classList.add('on');
   el.classList.add('on');
+  if(p==='tarifas'){renderTarifas();}
+  if(p==='liquidacion'){syncLqCam();}
+  if(p==='impresion'){syncLqCam();}
   if(p==='dashboard')renderDashboard();
   if(p==='viajes'){syncSel();renderViajes();}
   if(p==='camiones')renderCamiones();
@@ -873,8 +962,207 @@ function importData(e){
 function fmt(f){if(!f)return'';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`;}
 function abr(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(0)+'K';return Math.round(n).toLocaleString('es-AR');}
 
-// INIT
-document.getElementById('vf').valueAsDate=new Date();
+
+// ============================================================
+// TARIFAS
+// ============================================================
+function addTarifa(){
+  const o=document.getElementById('tf-o').value.trim();
+  const d=document.getElementById('tf-d').value.trim();
+  const p=parseFloat(document.getElementById('tf-p').value)||0;
+  const m=document.getElementById('tf-m').value;
+  const obs=document.getElementById('tf-obs').value.trim();
+  if(!o||!d){alert('Ingresá origen y destino.');return;}
+  if(!p){alert('Ingresá el precio.');return;}
+  if(!D.tarifas)D.tarifas=[];
+  D.tarifas.push({id:Date.now(),o,d,p,m,obs});
+  save(); renderTarifas();
+  ['tf-o','tf-d','tf-p','tf-obs'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Tarifa guardada');
+}
+function delTarifa(id){
+  if(!confirm('¿Eliminar esta tarifa?'))return;
+  D.tarifas=D.tarifas.filter(t=>t.id!==id);
+  save(); renderTarifas(); toast('🗑️ Tarifa eliminada','var(--red)');
+}
+function renderTarifas(){
+  if(!D.tarifas)D.tarifas=[];
+  const el=document.getElementById('lista-tarifas');
+  if(!el)return;
+  if(!D.tarifas.length){el.innerHTML='<div class="empty"><div class="ei">💰</div>Sin tarifas registradas.</div>';return;}
+  el.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>Origen</th><th>Destino</th><th>Precio</th><th>Moneda</th><th>Notas</th><th></th></tr></thead><tbody>'+
+    D.tarifas.map(t=>`<tr>
+      <td>${t.o}</td><td>${t.d}</td>
+      <td class="td-monto">${t.m==='USD'?'U$D':'$'}${t.p.toLocaleString('es-AR')}</td>
+      <td class="td-dim">${t.m}</td>
+      <td class="td-dim">${t.obs||'—'}</td>
+      <td><button class="btn-del" onclick="delTarifa(${t.id})">✕</button></td>
+    </tr>`).join('')+
+  '</tbody></table></div>';
+}
+
+// ============================================================
+// LIQUIDACION CHOFER
+// ============================================================
+function syncLqCam(){
+  const el=document.getElementById('lq-cam');
+  if(!el)return;
+  el.innerHTML='<option value="">— Seleccionar —</option>'+
+    D.camiones.map(c=>`<option value="${c.id}">${c.patente}${c.chofer?' – '+c.chofer:''}</option>`).join('');
+  const el2=document.getElementById('imp-cam');
+  if(el2)el2.innerHTML='<option value="">Todos los camiones</option>'+
+    D.camiones.map(c=>`<option value="${c.id}">${c.patente}${c.chofer?' – '+c.chofer:''}</option>`).join('');
+}
+function calcLiquidacion(){
+  const cid=parseInt(document.getElementById('lq-cam').value);
+  const desde=document.getElementById('lq-desde').value;
+  const hasta=document.getElementById('lq-hasta').value;
+  const fijo=parseFloat(document.getElementById('lq-fijo').value)||0;
+  const pct=parseFloat(document.getElementById('lq-pct').value)||0;
+  const xviaje=parseFloat(document.getElementById('lq-xviaje').value)||0;
+  const pGasoil=parseFloat(document.getElementById('lq-gasoil').value)||0;
+  if(!cid){alert('Seleccioná un camión/chofer.');return;}
+  const cam=D.camiones.find(c=>c.id===cid);
+  let vs=D.viajes.filter(v=>v.cid===cid);
+  if(desde)vs=vs.filter(v=>v.f>=desde);
+  if(hasta)vs=vs.filter(v=>v.f<=hasta);
+  if(!vs.length){document.getElementById('resultado-lq').innerHTML='<div class="empty"><div class="ei">📋</div>Sin viajes en ese período.</div>';return;}
+  const totalKm=vs.reduce((s,v)=>s+(v.km||0),0);
+  const totalLt=vs.reduce((s,v)=>s+(v.lt||0),0);
+  const totalAdv=vs.reduce((s,v)=>s+(v.adv||0),0);
+  const costoGasoil=pGasoil>0?totalLt*pGasoil:0;
+  // buscar tarifa promedio para calcular % 
+  const totalTarifa=vs.reduce((s,v)=>{
+    if(!D.tarifas)return s;
+    const tf=D.tarifas.find(t=>t.o.toLowerCase()===v.o.toLowerCase()&&t.d.toLowerCase()===v.d.toLowerCase());
+    return s+(tf?tf.p:0);
+  },0);
+  const porPct=pct>0?(totalTarifa*pct/100):0;
+  const porViaje=xviaje>0?xviaje*vs.length:0;
+  const totalBruto=fijo+porPct+porViaje;
+  const totalNeto=totalBruto-totalAdv;
+  document.getElementById('resultado-lq').innerHTML=`
+    <div class="card" style="max-width:600px;">
+      <div class="card-title">📋 Liquidación — ${cam.patente}${cam.chofer?' / '+cam.chofer:''}</div>
+      <div style="font-size:.78rem;color:var(--dim2);margin-bottom:12px">${desde?fmt(desde):'inicio'} al ${hasta?fmt(hasta):'hoy'}</div>
+      <div class="rc-row"><span>🗺️ Viajes realizados</span><strong>${vs.length}</strong></div>
+      <div class="rc-row"><span>📍 Km recorridos</span><strong>${totalKm.toLocaleString('es-AR')} km</strong></div>
+      <div class="rc-row"><span>⛽ Gasoil consumido</span><strong>${totalLt.toLocaleString('es-AR')} L</strong></div>
+      ${costoGasoil>0?`<div class="rc-row"><span>💧 Costo gasoil</span><strong>$${costoGasoil.toLocaleString('es-AR')}</strong></div>`:''}
+      <div style="border-top:2px solid var(--brd);margin:10px 0;padding-top:10px">
+        ${fijo>0?`<div class="rc-row"><span>💵 Sueldo fijo</span><strong style="color:var(--green)">$${fijo.toLocaleString('es-AR')}</strong></div>`:''}
+        ${porPct>0?`<div class="rc-row"><span>📊 ${pct}% sobre tarifas ($${totalTarifa.toLocaleString('es-AR')})</span><strong style="color:var(--green)">$${porPct.toLocaleString('es-AR')}</strong></div>`:''}
+        ${porViaje>0?`<div class="rc-row"><span>🚛 Monto fijo x viaje (${vs.length} × $${xviaje.toLocaleString('es-AR')})</span><strong style="color:var(--green)">$${porViaje.toLocaleString('es-AR')}</strong></div>`:''}
+        <div class="rc-row"><span style="font-weight:700">TOTAL BRUTO</span><strong style="color:var(--acc);font-size:1rem">$${totalBruto.toLocaleString('es-AR')}</strong></div>
+        ${totalAdv>0?`<div class="rc-row"><span>➖ Adelantos descontados</span><strong style="color:var(--red)">-$${totalAdv.toLocaleString('es-AR')}</strong></div>`:''}
+        <div class="rc-row" style="border-top:2px solid var(--acc);margin-top:6px;padding-top:8px"><span style="font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700">A PAGAR</span><strong style="color:var(--green);font-size:1.2rem;font-family:'Oswald',sans-serif">$${totalNeto.toLocaleString('es-AR')}</strong></div>
+      </div>
+      <button class="btn btn-p" style="margin-top:12px" onclick="imprimirLiquidacion()">🖨️ Imprimir liquidación</button>
+    </div>`;
+  // store for printing
+  window._lqData={cam,vs,totalKm,totalLt,costoGasoil,fijo,porPct,pct,totalTarifa,porViaje,xviaje,totalBruto,totalAdv,totalNeto,desde,hasta};
+}
+
+// ============================================================
+// IMPRESION
+// ============================================================
+function imprimirViajes(){
+  const cid=document.getElementById('imp-cam').value;
+  const desde=document.getElementById('imp-desde').value;
+  const hasta=document.getElementById('imp-hasta').value;
+  let vs=[...D.viajes].sort((a,b)=>a.f.localeCompare(b.f));
+  if(cid)vs=vs.filter(v=>v.cid==cid);
+  if(desde)vs=vs.filter(v=>v.f>=desde);
+  if(hasta)vs=vs.filter(v=>v.f<=hasta);
+  const cam=cid?D.camiones.find(c=>c.id==cid):null;
+  const totalG=vs.reduce((s,v)=>s+tvTot(v),0);
+  const totalKm=vs.reduce((s,v)=>s+(v.km||0),0);
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen de Viajes</title>
+  <style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}
+  h1{font-size:1.4rem;margin-bottom:4px;}h2{font-size:1rem;color:#555;font-weight:normal;margin-bottom:20px;}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+  th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #ccc;}
+  td{padding:7px 10px;border-bottom:1px solid #eee;}
+  .tot{font-weight:700;}.resumen{background:#f9f9f9;padding:14px;border-radius:8px;margin-bottom:20px;display:flex;gap:30px;}
+  .ri{text-align:center;}.rv{font-size:1.4rem;font-weight:700;color:#f97316;}.rl{font-size:.7rem;text-transform:uppercase;color:#888;}
+  @media print{button{display:none!important;}}</style></head><body>
+  <h1>🚛 TRANSPORTE VICENTE — Resumen de viajes</h1>
+  <h2>${cam?'Camión: '+cam.patente+' '+(cam.chofer||''):'Todos los camiones'} · ${desde?fmt(desde):'inicio'} al ${hasta?fmt(hasta):'hoy'}</h2>
+  <div class="resumen">
+    <div class="ri"><div class="rv">${vs.length}</div><div class="rl">Viajes</div></div>
+    <div class="ri"><div class="rv">${totalKm.toLocaleString('es-AR')}</div><div class="rl">Kilómetros</div></div>
+    <div class="ri"><div class="rv">$${totalG.toLocaleString('es-AR')}</div><div class="rl">Total gastos</div></div>
+  </div>
+  <table><thead><tr><th>Fecha</th><th>Camión</th><th>Origen</th><th>Destino</th><th>Km</th><th>Gasoil</th><th>Adelanto</th><th>Gastos</th><th>Total</th></tr></thead><tbody>
+  ${vs.map(v=>{const c=D.camiones.find(x=>x.id===v.cid);const sg=(v.gs||[]).reduce((s,g)=>s+g.monto,0);return`<tr><td>${fmt(v.f)}</td><td>${c?c.patente:'?'}</td><td>${v.o}</td><td>${v.d}</td><td>${v.km||'—'}</td><td>${v.lt?v.lt+'L':'—'}</td><td>${v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—'}</td><td>${sg>0?'$'+sg.toLocaleString('es-AR'):'—'}</td><td class="tot">$${tvTot(v).toLocaleString('es-AR')}</td></tr>`;}).join('')}
+  </tbody></table>
+  <button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button>
+  </body></html>`);
+  w.document.close();
+}
+
+function imprimirResumen(){
+  const w=window.open('','_blank');
+  const filas=D.camiones.map(c=>{
+    const vs=D.viajes.filter(v=>v.cid===c.id);
+    const km=vs.reduce((s,v)=>s+(v.km||0),0);
+    const lt=vs.reduce((s,v)=>s+(v.lt||0),0);
+    const tot=vs.reduce((s,v)=>s+tvTot(v),0);
+    const adv=vs.reduce((s,v)=>s+(v.adv||0),0);
+    const rr=lt>0?(km/lt).toFixed(1):'—';
+    return`<tr><td>${c.patente}</td><td>${c.chofer||'—'}</td><td>${vs.length}</td><td>${km.toLocaleString('es-AR')}</td><td>${lt.toLocaleString('es-AR')}</td><td>${rr}</td><td>$${adv.toLocaleString('es-AR')}</td><td class="tot">$${tot.toLocaleString('es-AR')}</td></tr>`;
+  }).join('');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen por Camión</title>
+  <style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:20px;}
+  table{width:100%;border-collapse:collapse;}th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid #ccc;}
+  td{padding:7px 10px;border-bottom:1px solid #eee;}.tot{font-weight:700;color:#f97316;}
+  @media print{button{display:none!important;}}</style></head><body>
+  <h1>🚛 TRANSPORTE VICENTE — Resumen por camión</h1>
+  <table><thead><tr><th>Patente</th><th>Chofer</th><th>Viajes</th><th>Km</th><th>Gasoil (L)</th><th>Rend.</th><th>Adelantos</th><th>Total gastos</th></tr></thead>
+  <tbody>${filas}</tbody></table><br>
+  <button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button>
+  </body></html>`);
+  w.document.close();
+}
+
+function imprimirLiquidacion(){
+  const lq=window._lqData;
+  if(!lq)return;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liquidación Chofer</title>
+  <style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:4px;}
+  h2{font-size:1rem;color:#555;font-weight:normal;margin-bottom:20px;}
+  .fila{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;}
+  .tot{font-weight:700;font-size:1.1rem;border-top:2px solid #f97316;margin-top:8px;padding-top:10px;}
+  .pagar{font-size:1.4rem;font-weight:700;color:#f97316;}
+  @media print{button{display:none!important;}}</style></head><body>
+  <h1>🚛 TRANSPORTE VICENTE — Liquidación de chofer</h1>
+  <h2>${lq.cam.patente}${lq.cam.chofer?' / '+lq.cam.chofer:''} · ${lq.desde?fmt(lq.desde):'inicio'} al ${lq.hasta?fmt(lq.hasta):'hoy'}</h2>
+  <div class="fila"><span>Viajes realizados</span><strong>${lq.vs.length}</strong></div>
+  <div class="fila"><span>Km recorridos</span><strong>${lq.totalKm.toLocaleString('es-AR')} km</strong></div>
+  <div class="fila"><span>Gasoil consumido</span><strong>${lq.totalLt.toLocaleString('es-AR')} L</strong></div>
+  ${lq.costoGasoil>0?`<div class="fila"><span>Costo gasoil</span><strong>$${lq.costoGasoil.toLocaleString('es-AR')}</strong></div>`:''}
+  ${lq.fijo>0?`<div class="fila"><span>Sueldo fijo</span><strong>$${lq.fijo.toLocaleString('es-AR')}</strong></div>`:''}
+  ${lq.porPct>0?`<div class="fila"><span>${lq.pct}% sobre tarifas</span><strong>$${lq.porPct.toLocaleString('es-AR')}</strong></div>`:''}
+  ${lq.porViaje>0?`<div class="fila"><span>Monto fijo x viaje (${lq.vs.length} × $${lq.xviaje.toLocaleString('es-AR')})</span><strong>$${lq.porViaje.toLocaleString('es-AR')}</strong></div>`:''}
+  <div class="fila"><span>Total bruto</span><strong>$${lq.totalBruto.toLocaleString('es-AR')}</strong></div>
+  ${lq.totalAdv>0?`<div class="fila"><span>Adelantos descontados</span><strong>-$${lq.totalAdv.toLocaleString('es-AR')}</strong></div>`:''}
+  <div class="fila tot"><span>A PAGAR</span><span class="pagar">$${lq.totalNeto.toLocaleString('es-AR')}</span></div>
+  <br><button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button>
+  </body></html>`);
+  w.document.close();
+}
+
 </script>
 </body>
 </html>
+<script>
+// INIT EXTRAS
+if(!D.tarifas)D.tarifas=[];
+document.getElementById('vf').valueAsDate=new Date();
+const _hoy=new Date().toISOString().slice(0,10);
+const _primer=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().slice(0,10);
+['lq-desde','imp-desde'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=_primer;});
+['lq-hasta','imp-hasta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=_hoy;});
+</script>
