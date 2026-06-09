@@ -727,10 +727,84 @@ function getCreds(){return JSON.parse(localStorage.getItem('fc_creds')||'{"user"
 function saveCreds(c){localStorage.setItem('fc_creds',JSON.stringify(c));}
 
 // ============================================================
-// DATA
+// SUPABASE CONFIG
 // ============================================================
-let D=JSON.parse(localStorage.getItem('fc_data2')||'{"camiones":[],"viajes":[]}');
-function save(){localStorage.setItem('fc_data2',JSON.stringify(D));}
+const SB_URL = 'https://oyouscolubayfpwgaocg.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95b3VzY29sdWJheWZwd2dhb2NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDk4NzcsImV4cCI6MjA5NjUyNTg3N30.iWzYVGLtxgs5Tm5fMGvd7mX-Kmi05KPG_duQ8XfmcmU';
+
+async function sbFetch(path, method='GET', body=null){
+  const opts = {
+    method,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method==='POST'?'return=representation':'',
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(SB_URL + '/rest/v1/' + path, opts);
+  if(!r.ok){ const e=await r.text(); console.error('SB error:',e); return null; }
+  const txt = await r.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+// DATA en memoria
+let D = {camiones:[],viajes:[],tarifas:[],clientes:[],proveedores:[]};
+
+// Cargar todos los datos desde Supabase
+async function loadAll(){
+  showLoading(true);
+  try {
+    const [cam,via,tar,cli,prov] = await Promise.all([
+      sbFetch('camiones?select=*&order=id'),
+      sbFetch('viajes?select=*&order=f.desc'),
+      sbFetch('tarifas?select=*&order=id'),
+      sbFetch('clientes?select=*&order=nom'),
+      sbFetch('proveedores?select=*&order=nom'),
+    ]);
+    D.camiones = cam||[];
+    D.viajes = (via||[]).map(v=>({...v,cid:Number(v.cid),gs:v.gs||[]}));
+    D.tarifas = tar||[];
+    D.clientes = (cli||[]).map(c=>({...c,docs:c.docs||[]}));
+    D.proveedores = (prov||[]).map(p=>({...p,docs:p.docs||[]}));
+  } catch(e){ console.error('Error loading:',e); }
+  showLoading(false);
+}
+
+function showLoading(on){
+  let el=document.getElementById('loading-overlay');
+  if(!el){
+    el=document.createElement('div');
+    el.id='loading-overlay';
+    el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;font-size:1.2rem;color:#f97316;letter-spacing:1px;';
+    el.innerHTML='<div>⏳ Cargando datos...</div>';
+    document.body.appendChild(el);
+  }
+  el.style.display=on?'flex':'none';
+}
+
+// Funciones de guardado individuales
+async function saveCamion(c){ return await sbFetch('camiones','POST',c); }
+async function updateCamion(id,data){ return await sbFetch('camiones?id=eq.'+id,'PATCH',data); }
+async function deleteCamion(id){ await sbFetch('camiones?id=eq.'+id,'DELETE'); }
+
+async function saveViaje(v){ return await sbFetch('viajes','POST',v); }
+async function updateViaje(id,data){ return await sbFetch('viajes?id=eq.'+id,'PATCH',data); }
+async function deleteViaje(id){ await sbFetch('viajes?id=eq.'+id,'DELETE'); }
+
+async function saveTarifa(t){ return await sbFetch('tarifas','POST',t); }
+async function deleteTarifa(id){ await sbFetch('tarifas?id=eq.'+id,'DELETE'); }
+
+async function saveCliente(c){ return await sbFetch('clientes','POST',c); }
+async function deleteCliente(id){ await sbFetch('clientes?id=eq.'+id,'DELETE'); }
+async function updateCliente(id,data){ return await sbFetch('clientes?id=eq.'+id,'PATCH',data); }
+
+async function saveProveedor(p){ return await sbFetch('proveedores','POST',p); }
+async function deleteProveedor(id){ await sbFetch('proveedores?id=eq.'+id,'DELETE'); }
+async function updateProveedor(id,data){ return await sbFetch('proveedores?id=eq.'+id,'PATCH',data); }
+
+function save(){} // legacy - no usado
 
 // ============================================================
 // LOGIN
@@ -744,7 +818,7 @@ function doLogin(){
     const app=document.getElementById('app');
     app.style.display='flex';
     document.getElementById('tb-uname').textContent=u;
-    renderDashboard();
+    loadAll().then(()=>{renderDashboard();renderCamiones();syncSel();});
   } else {
     const e=document.getElementById('l-err');
     e.style.display='block';
@@ -803,11 +877,12 @@ function addCam(){
   save(); renderCamiones(); syncSel(); toast('✅ Camión registrado');
   ['cp','cr','cm2','cc'].forEach(id=>document.getElementById(id).value='');
 }
-function delCam(id){
+async function delCam(id){
   if(!confirm('¿Eliminar este camión y todos sus viajes?'))return;
+  await deleteCamion(id);
   D.camiones=D.camiones.filter(x=>x.id!==id);
   D.viajes=D.viajes.filter(x=>x.cid!==id);
-  save(); renderCamiones(); syncSel(); toast('🗑️ Camión eliminado','var(--red)');
+  renderCamiones(); syncSel(); toast('🗑️ Camión eliminado','var(--red)');
 }
 function renderCamiones(){
   const el=document.getElementById('cam-grid');
@@ -889,16 +964,19 @@ function saveViaje(){
   if(!o||!d){alert('Ingresá origen y destino.');return;}
   if(_editViajeId){
     const idx=D.viajes.findIndex(v=>v.id===_editViajeId);
-    if(idx>=0)D.viajes[idx]={...D.viajes[idx],cid,f,o,d,km,lt,pgl,adv,gs,obs};
+    const updated={cid,f,o,d,km,lt,pgl,adv,gs,obs};
+    if(idx>=0)D.viajes[idx]={...D.viajes[idx],...updated};
+    await updateViaje(_editViajeId,updated);
     _editViajeId=null;
     document.querySelector('#form-viaje .card-title').textContent='Registrar nuevo viaje';
     document.querySelector('#form-viaje .btn-p').textContent='✓ Guardar Viaje';
     toast('✅ Viaje actualizado correctamente');
   } else {
-    D.viajes.push({id:Date.now(),cid,f,o,d,km,lt,pgl,adv,gs,obs});
+    const newV={id:Date.now(),cid,f,o,d,km,lt,pgl,adv,gs,obs};
+    await saveViaje(newV);
+    D.viajes.unshift(newV);
     toast('✅ Viaje guardado correctamente');
   }
-  save();
   ['vk','vl','va','vobs','vo','vd','vpgl'].forEach(id=>document.getElementById(id).value='');
   gfRows=[];renderGF();
   document.getElementById('rhint').style.display='none';
@@ -933,10 +1011,11 @@ function editViaje(id){
   document.querySelector('#form-viaje .btn-p').textContent='✓ Actualizar Viaje';
   document.getElementById('form-viaje').scrollIntoView({behavior:'smooth'});
 }
-function delViaje(id){
+async function delViaje(id){
   if(!confirm('¿Eliminar este viaje?'))return;
+  await deleteViaje(id);
   D.viajes=D.viajes.filter(v=>v.id!==id);
-  save(); renderViajes(); renderDashboard(); toast('🗑️ Viaje eliminado','var(--red)');
+  renderViajes(); renderDashboard(); toast('🗑️ Viaje eliminado','var(--red)');
 }
 function tvTot(v){return((v.gs||[]).reduce((s,g)=>s+g.monto,0))+(v.adv||0);}
 const TICO={Peaje:'🛣️','Viáticos':'🍽️','Neumáticos':'🔵',Reparación:'🔧',Estadía:'🏨',Comida:'🥗',Otro:'📦'};
@@ -1129,7 +1208,7 @@ function saveConfig(){
 // BACKUP
 // ============================================================
 function exportData(){
-  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({camiones:D.camiones,viajes:D.viajes,tarifas:D.tarifas,clientes:D.clientes,proveedores:D.proveedores},null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='flotacontrol-backup-'+new Date().toISOString().slice(0,10)+'.json';
@@ -1173,15 +1252,18 @@ function addTarifa(){
   if(!D.tarifas)D.tarifas=[];
 if(!D.clientes)D.clientes=[];
 if(!D.proveedores)D.proveedores=[];
-  D.tarifas.push({id:Date.now(),o,d,p,m,obs});
-  save(); renderTarifas();
+  const newT={id:Date.now(),o,d,p,m,obs};
+  await saveTarifa(newT);
+  D.tarifas.push(newT);
+  renderTarifas();
   ['tf-o','tf-d','tf-p','tf-obs'].forEach(id=>document.getElementById(id).value='');
   toast('✅ Tarifa guardada');
 }
-function delTarifa(id){
+async function delTarifa(id){
   if(!confirm('¿Eliminar esta tarifa?'))return;
+  await deleteTarifa(id);
   D.tarifas=D.tarifas.filter(t=>t.id!==id);
-  save(); renderTarifas(); toast('🗑️ Tarifa eliminada','var(--red)');
+  renderTarifas(); toast('🗑️ Tarifa eliminada','var(--red)');
 }
 function renderTarifas(){
   if(!D.tarifas)D.tarifas=[];
@@ -1361,7 +1443,7 @@ function addCliente(){
   const nom=document.getElementById('cl-nom').value.trim();
   if(!nom){alert('Ingresá el nombre.');return;}
   if(!D.clientes)D.clientes=[];
-  D.clientes.push({
+  const newCl={
     id:Date.now(),
     nom,
     tipo:document.getElementById('cl-tipo').value,
@@ -1371,15 +1453,18 @@ function addCliente(){
     dir:document.getElementById('cl-dir').value.trim(),
     obs:document.getElementById('cl-obs').value.trim(),
     docs:[]
-  });
-  save(); renderClientes();
+  };
+  await saveCliente(newCl);
+  D.clientes.push(newCl);
+  renderClientes();
   ['cl-nom','cl-cuit','cl-tel','cl-email','cl-dir','cl-obs'].forEach(id=>document.getElementById(id).value='');
   toggleFormCliente(); toast('✅ Cliente guardado');
 }
-function delCliente(id){
+async function delCliente(id){
   if(!confirm('¿Eliminar este cliente y todos sus documentos?'))return;
+  await deleteCliente(id);
   D.clientes=D.clientes.filter(c=>c.id!==id);
-  save(); renderClientes(); toast('🗑️ Cliente eliminado','var(--red)');
+  renderClientes(); toast('🗑️ Cliente eliminado','var(--red)');
 }
 function renderClientes(){
   if(!D.clientes)D.clientes=[];
@@ -1441,7 +1526,8 @@ function addDocCliente(){
     estado:document.getElementById('doc-estado').value,
     desc:document.getElementById('doc-desc').value.trim()
   });
-  save(); renderDocsCliente();
+  await updateCliente(c.id,{docs:c.docs});
+  renderDocsCliente();
   ['doc-num','doc-monto','doc-desc'].forEach(id=>document.getElementById(id).value='');
   toast('✅ Documento agregado');
 }
@@ -1449,7 +1535,8 @@ function delDocCliente(docId){
   const c=D.clientes.find(x=>x.id===_clienteActivo);
   if(!c)return;
   c.docs=c.docs.filter(d=>d.id!==docId);
-  save(); renderDocsCliente(); toast('🗑️ Documento eliminado','var(--red)');
+  await updateCliente(c.id,{docs:c.docs});
+  renderDocsCliente(); toast('🗑️ Documento eliminado','var(--red)');
 }
 function renderDocsCliente(){
   const c=D.clientes.find(x=>x.id===_clienteActivo);
@@ -1486,7 +1573,7 @@ function addProveedor(){
   const nom=document.getElementById('pv-nom').value.trim();
   if(!nom){alert('Ingresá el nombre.');return;}
   if(!D.proveedores)D.proveedores=[];
-  D.proveedores.push({
+  const newPv={
     id:Date.now(),nom,
     rubro:document.getElementById('pv-rubro').value,
     cuit:document.getElementById('pv-cuit').value.trim(),
@@ -1494,15 +1581,18 @@ function addProveedor(){
     cont:document.getElementById('pv-cont').value.trim(),
     obs:document.getElementById('pv-obs').value.trim(),
     docs:[]
-  });
-  save(); renderProveedores();
+  };
+  await saveProveedor(newPv);
+  D.proveedores.push(newPv);
+  renderProveedores();
   ['pv-nom','pv-cuit','pv-tel','pv-cont','pv-obs'].forEach(id=>document.getElementById(id).value='');
   toggleFormProveedor(); toast('✅ Proveedor guardado');
 }
-function delProveedor(id){
+async function delProveedor(id){
   if(!confirm('¿Eliminar este proveedor?'))return;
+  await deleteProveedor(id);
   D.proveedores=D.proveedores.filter(p=>p.id!==id);
-  save(); renderProveedores(); toast('🗑️ Proveedor eliminado','var(--red)');
+  renderProveedores(); toast('🗑️ Proveedor eliminado','var(--red)');
 }
 function renderProveedores(){
   if(!D.proveedores)D.proveedores=[];
@@ -1563,7 +1653,8 @@ function addDocProveedor(){
     estado:document.getElementById('pdoc-estado').value,
     desc:document.getElementById('pdoc-desc').value.trim()
   });
-  save(); renderDocsProveedor();
+  await updateProveedor(p.id,{docs:p.docs});
+  renderDocsProveedor();
   ['pdoc-num','pdoc-monto','pdoc-desc'].forEach(id=>document.getElementById(id).value='');
   toast('✅ Documento agregado');
 }
@@ -1571,7 +1662,8 @@ function delDocProveedor(docId){
   const p=D.proveedores.find(x=>x.id===_proveedorActivo);
   if(!p)return;
   p.docs=p.docs.filter(d=>d.id!==docId);
-  save(); renderDocsProveedor(); toast('🗑️ Documento eliminado','var(--red)');
+  await updateProveedor(p.id,{docs:p.docs});
+  renderDocsProveedor(); toast('🗑️ Documento eliminado','var(--red)');
 }
 function renderDocsProveedor(){
   const p=D.proveedores.find(x=>x.id===_proveedorActivo);
@@ -1607,7 +1699,8 @@ function cambiarEstadoDocCliente(docId, nuevoEstado){
   const doc=c.docs.find(d=>d.id===docId);
   if(!doc)return;
   doc.estado=nuevoEstado;
-  save(); renderDocsCliente();
+  await updateCliente(c.id,{docs:c.docs});
+  renderDocsCliente();
   toast(nuevoEstado==='Cobrado'?'✅ Marcado como cobrado':nuevoEstado==='Anulado'?'❌ Documento anulado':'🟡 Vuelto a pendiente');
 }
 function cambiarEstadoDocProveedor(docId, nuevoEstado){
@@ -1616,7 +1709,8 @@ function cambiarEstadoDocProveedor(docId, nuevoEstado){
   const doc=p.docs.find(d=>d.id===docId);
   if(!doc)return;
   doc.estado=nuevoEstado;
-  save(); renderDocsProveedor();
+  await updateProveedor(p.id,{docs:p.docs});
+  renderDocsProveedor();
   toast(nuevoEstado==='Pagado'?'✅ Marcado como pagado':nuevoEstado==='Anulado'?'❌ Documento anulado':'🟡 Vuelto a pendiente');
 }
 
