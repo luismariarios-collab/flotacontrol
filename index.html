@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Transporte Vicente — Sistema de Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0d1117;--s1:#161b22;--s2:#1f2733;--s3:#273040;--acc:#f97316;--acc2:#fb923c;--blue:#38bdf8;--green:#34d399;--red:#f87171;--yellow:#fbbf24;--txt:#e6edf3;--dim:#8b949e;--brd:#30363d;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:var(--s1);}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px;}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 60% 40%,#1a2535 0%,var(--bg) 70%);}
+.lb{background:var(--s1);border:1px solid var(--brd);border-radius:16px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+.li{text-align:center;margin-bottom:32px;}
+.lic{width:72px;height:72px;background:linear-gradient(135deg,var(--acc),#c2410c);border-radius:18px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:2rem;overflow:hidden;box-shadow:0 8px 24px rgba(249,115,22,.35);}
+.lic img{width:100%;height:100%;object-fit:contain;background:#fff;padding:4px;border-radius:18px;}
+.lt{font-family:'Oswald',sans-serif;font-size:1.8rem;font-weight:700;letter-spacing:1px;}
+.lt em{color:var(--acc);font-style:normal;}
+.ls{font-size:.8rem;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+.lfg{margin-bottom:16px;}
+.lfg label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:6px;}
+.lfg input{width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:11px 14px;color:var(--txt);font-family:'Source Sans 3',sans-serif;font-size:.95rem;outline:none;transition:border-color .2s;}
+.lfg input:focus{border-color:var(--acc);}
+.lbtn{width:100%;background:linear-gradient(135deg,var(--acc),#ea580c);color:#fff;border:none;border-radius:8px;padding:13px;font-family:'Oswald',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-top:8px;}
+.lerr{color:var(--red);font-size:.82rem;text-align:center;margin-top:10px;display:none;}
+.lhint{font-size:.72rem;color:var(--dim);text-align:center;margin-top:20px;line-height:1.6;}
+
+/* APP */
+#app{display:none;height:100vh;flex-direction:column;}
+.topbar{height:54px;background:var(--s1);border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;box-shadow:0 2px 12px rgba(0,0,0,.4);}
+.tbl{display:flex;align-items:center;gap:12px;}
+.tbi{width:34px;height:34px;background:linear-gradient(135deg,var(--acc),#c2410c);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;overflow:hidden;flex-shrink:0;}
+.tbi img{width:100%;height:100%;object-fit:contain;background:#fff;padding:2px;border-radius:8px;}
+.tbn{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.5px;}
+.tbn em{color:var(--acc);font-style:normal;}
+.tbr{display:flex;align-items:center;gap:16px;}
+.tbu{font-size:.82rem;color:var(--dim);}
+.tbu span{color:var(--txt);font-weight:600;}
+.lout{background:none;border:1px solid var(--brd);border-radius:6px;color:var(--dim);font-size:.75rem;font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:5px 12px;cursor:pointer;}
+.lout:hover{border-color:var(--red);color:var(--red);}
+.main{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:220px;background:var(--s1);border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;padding:16px 0;overflow-y:auto;}
+.ns{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);padding:0 16px;margin-bottom:6px;margin-top:16px;}
+.ns:first-child{margin-top:0;}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;font-size:.88rem;font-weight:500;color:var(--dim);border-left:3px solid transparent;transition:all .15s;user-select:none;}
+.ni:hover{background:var(--s2);color:var(--txt);}
+.ni.on{background:var(--s2);color:var(--acc);border-left-color:var(--acc);font-weight:600;}
+.ni .ic{font-size:1rem;width:20px;text-align:center;}
+.sbbot{margin-top:auto;padding:16px;border-top:1px solid var(--brd);}
+.ca{width:100%;background:none;border:1px solid var(--brd);border-radius:7px;color:var(--dim);font-size:.75rem;font-family:'Source Sans 3',sans-serif;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.ca:hover{border-color:var(--blue);color:var(--blue);}
+.cnt{flex:1;overflow-y:auto;padding:24px;background:var(--bg);}
+.panel{display:none;}.panel.on{display:block;}
+
+/* PAGE */
+.pgh{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.pgt{font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:10px;}
+.pgt em{color:var(--acc);font-style:normal;}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.sc{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;}
+.sc::after{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--acc);}
+.sv{font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:700;color:var(--acc);line-height:1;}
+.sl{font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+.sc.blue::after{background:var(--blue);}.sc.blue .sv{color:var(--blue);}
+.sc.green::after{background:var(--green);}.sc.green .sv{color:var(--green);}
+.sc.yellow::after{background:var(--yellow);}.sc.yellow .sv{color:var(--yellow);}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:18px;margin-bottom:16px;}
+.ct{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.ct::after{content:'';flex:1;height:1px;background:var(--brd);}
+
+/* FORM */
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);margin-bottom:5px;}
+.fg input,.fg select{width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:8px 11px;color:var(--txt);font-family:'Source Sans 3',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;}
+.fg input:focus,.fg select:focus{border-color:var(--acc);}
+.fg select option{background:var(--s2);}
+.hint{font-size:.68rem;color:var(--dim);margin-top:-8px;margin-bottom:8px;display:none;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;border:none;font-family:'Oswald',sans-serif;font-weight:600;font-size:.88rem;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+.btn-p{background:linear-gradient(135deg,var(--acc),#ea580c);color:#fff;box-shadow:0 3px 10px rgba(249,115,22,.25);}
+.btn-p:hover{box-shadow:0 5px 16px rgba(249,115,22,.4);}
+.btn-o{background:none;border:1px solid var(--brd);color:var(--dim);}
+.btn-o:hover{border-color:var(--acc);color:var(--acc);}
+.btn-del{background:none;border:none;color:var(--dim);font-size:.78rem;font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;padding:4px 8px;border-radius:5px;}
+.btn-del:hover{color:var(--red);background:rgba(248,113,113,.1);}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:10px;border:1px solid var(--brd);}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+thead tr{background:var(--s2);}
+thead th{padding:11px 14px;text-align:left;font-family:'Oswald',sans-serif;font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);border-bottom:1px solid var(--brd);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--brd);transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--s2);}
+tbody td{padding:10px 14px;vertical-align:middle;}
+.ta{color:var(--acc);font-family:'Oswald',sans-serif;font-weight:700;font-size:.95rem;white-space:nowrap;}
+.td{color:var(--dim);font-size:.8rem;}
+.ty{color:var(--yellow);font-family:'Oswald',sans-serif;font-weight:600;}
+
+/* GASTOS INLINE */
+.gi{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.gi select{flex:0 0 130px;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:7px 8px;color:var(--txt);font-size:.85rem;font-family:'Source Sans 3',sans-serif;outline:none;}
+.gi input{flex:1;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:7px 10px;color:var(--txt);font-size:.9rem;font-family:'Source Sans 3',sans-serif;outline:none;}
+.xb{width:28px;height:28px;background:none;border:1px solid var(--brd);border-radius:6px;color:var(--dim);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.xb:hover{color:var(--red);border-color:var(--red);}
+
+/* CAMION CARD */
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.cc{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:16px;position:relative;}
+.cp{font-family:'Oswald',sans-serif;font-weight:700;font-size:1.1rem;color:var(--acc);letter-spacing:1px;margin-bottom:4px;}
+.cm{font-size:.78rem;color:var(--dim);margin-bottom:2px;}
+.cs{font-size:.78rem;color:var(--blue);margin-top:8px;}
+
+/* RESUMEN CAM */
+.rcg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.rcc{background:var(--s1);border:1px solid var(--brd);border-radius:12px;overflow:hidden;}
+.rch{background:var(--s2);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--brd);}
+.rcb{padding:12px 14px;}
+.rf{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--brd);font-size:.82rem;}
+.rf:last-child{border-bottom:none;}
+.rf strong{font-family:'Oswald',sans-serif;font-size:.9rem;}
+
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.mbg.on{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--brd);border-radius:12px;padding:24px;width:100%;max-width:520px;max-height:80vh;overflow-y:auto;}
+.mtt{font-family:'Oswald',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:16px;color:var(--acc);display:flex;justify-content:space-between;align-items:center;}
+.mc{background:none;border:none;color:var(--dim);font-size:1.2rem;cursor:pointer;}
+.mc:hover{color:var(--red);}
+.dr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--brd);font-size:.85rem;}
+.dr:last-child{border-bottom:none;}
+.dr.tot{font-weight:700;color:var(--acc);font-size:.95rem;}
+
+/* CLIENTES / PROVEEDORES */
+.two{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;transform:translateY(80px);opacity:0;background:var(--green);color:#000;font-family:'Oswald',sans-serif;font-weight:700;font-size:.95rem;padding:10px 22px;border-radius:8px;z-index:999;transition:all .3s;pointer-events:none;}
+.toast.on{transform:translateY(0);opacity:1;}
+
+/* LOADING */
+#lov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+#lov.on{display:flex;}
+.lsp{width:40px;height:40px;border:3px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px;color:var(--dim);}
+.empty .ei{font-size:2rem;margin-bottom:8px;}
+
+/* FILTER */
+.frow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+.frow select{background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:6px 10px;color:var(--txt);font-size:.85rem;outline:none;}
+.frow label{font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="lov"><div class="lsp"></div><div style="color:var(--acc);font-family:'Oswald',sans-serif;letter-spacing:1px;">Cargando datos...</div></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lb">
+    <div class="li">
+      <div class="lic" id="lic">🚛</div>
+      <div class="lt">TRANSPORTE <em>VICENTE</em></div>
+      <div class="ls">Sistema de gestión de flota</div>
+    </div>
+    <div class="lfg"><label>Usuario</label><input id="lu" type="text" placeholder="Ingresá tu usuario" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="lfg"><label>Contraseña</label><input id="lp" type="password" placeholder="Ingresá tu contraseña" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="lbtn" onclick="doLogin()">Ingresar al sistema</button>
+    <div class="lerr" id="lerr">Usuario o contraseña incorrectos.</div>
+    <div class="lhint">Usuario por defecto: <strong>admin</strong><br/>Contraseña por defecto: <strong>flota123</strong><br/><small>Podés cambiarlos desde Configuración</small></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;height:100vh;flex-direction:column;">
+  <div class="topbar">
+    <div class="tbl">
+      <div class="tbi" id="tbi">🚛</div>
+      <div><div class="tbn">TRANSPORTE <em>VICENTE</em></div></div>
+    </div>
+    <div class="tbr">
+      <div class="tbu">Bienvenido, <span id="tbu"></span></div>
+      <button class="lout" onclick="doLogout()">⎋ Salir</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="sidebar">
+      <div class="ns">Principal</div>
+      <div class="ni on" onclick="goP('dashboard',this)"><span class="ic">📊</span>Dashboard</div>
+      <div class="ns">Operaciones</div>
+      <div class="ni" onclick="goP('viajes',this)"><span class="ic">🗺️</span>Viajes</div>
+      <div class="ni" onclick="goP('camiones',this)"><span class="ic">🚛</span>Camiones</div>
+      <div class="ni" onclick="goP('tarifas',this)"><span class="ic">💰</span>Tarifas de viaje</div>
+      <div class="ni" onclick="goP('liquidacion',this)"><span class="ic">👷</span>Liquidación chofer</div>
+      <div class="ns">Gestión comercial</div>
+      <div class="ni" onclick="goP('clientes',this)"><span class="ic">🤝</span>Clientes</div>
+      <div class="ni" onclick="goP('proveedores',this)"><span class="ic">🏭</span>Proveedores</div>
+      <div class="ns">Informes</div>
+      <div class="ni" onclick="goP('resumen',this)"><span class="ic">📈</span>Resumen por camión</div>
+      <div class="ni" onclick="goP('impresion',this)"><span class="ic">🖨️</span>Imprimir informes</div>
+      <div class="ns">Sistema</div>
+      <div class="ni" onclick="goP('config',this)"><span class="ic">⚙️</span>Configuración</div>
+      <div class="sbbot"><button class="ca" onclick="exportData()">💾 Exportar backup</button></div>
+    </div>
+    <div class="cnt">
+
+      <!-- DASHBOARD -->
+      <div id="p-dashboard" class="panel on">
+        <div class="pgh">
+          <div class="pgt"><em>📊</em>Dashboard</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <select id="dp" onchange="renderDash()" style="background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:6px 12px;color:var(--txt);font-size:.82rem;outline:none;">
+              <option value="todo">Todo el período</option>
+              <option value="mes">Este mes</option>
+              <option value="ant">Mes anterior</option>
+              <option value="tri">Últimos 3 meses</option>
+            </select>
+            <div style="font-size:.8rem;color:var(--dim)" id="dd"></div>
+          </div>
+        </div>
+        <div class="sg" id="dsg"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+          <div>
+            <div class="ct">🗺️ Últimos viajes</div>
+            <div id="duv"></div>
+          </div>
+          <div>
+            <div class="ct">🚛 Camiones activos</div>
+            <div id="dca"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIAJES -->
+      <div id="p-viajes" class="panel">
+        <div class="pgh">
+          <div class="pgt"><em>🗺️</em>Viajes</div>
+          <button class="btn btn-p" onclick="showFV()">+ Nuevo Viaje</button>
+        </div>
+        <div id="fv" style="display:none;margin-bottom:20px;">
+          <div class="card">
+            <div class="ct" id="fv-title">Registrar nuevo viaje</div>
+            <div class="fr3">
+              <div class="fg"><label>Camión</label><select id="vc" onchange="calcL()"><option value="">— Seleccionar —</option></select></div>
+              <div class="fg"><label>Fecha</label><input id="vf" type="date"/></div>
+              <div class="fg"><label>Kilómetros</label><input id="vk" type="number" placeholder="0" min="0" oninput="calcL()"/></div>
+            </div>
+            <div class="fr2">
+              <div class="fg"><label>Origen (punto de carga)</label><input id="vo" type="text" placeholder="Ciudad / localidad"/></div>
+              <div class="fg"><label>Destino</label><input id="vd" type="text" placeholder="Ciudad / localidad"/></div>
+            </div>
+            <div class="fr3">
+              <div class="fg">
+                <label>Litros de gasoil</label>
+                <input id="vl" type="number" placeholder="Auto / manual" step=".1" min="0"/>
+                <div class="hint" id="rh">💡 Calculado por rendimiento. Podés modificarlo.</div>
+              </div>
+              <div class="fg"><label>Precio gasoil ($/L)</label><input id="vpgl" type="number" placeholder="Ej: 1200" min="0"/></div>
+              <div class="fg"><label>Adelanto al chofer ($)</label><input id="va" type="number" placeholder="0.00" min="0"/></div>
+            </div>
+            <div class="fg"><label>Observaciones</label><input id="vobs" type="text" placeholder="Notas del viaje"/></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)">Gastos del viaje</span>
+              <button class="btn btn-o" style="padding:5px 12px;font-size:.78rem" onclick="addGF()">+ Agregar gasto</button>
+            </div>
+            <div id="gfl"></div>
+            <div style="display:flex;gap:10px;margin-top:8px">
+              <button class="btn btn-p" id="fv-btn" onclick="guardarViaje()">✓ Guardar Viaje</button>
+              <button class="btn btn-o" onclick="hideFV()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:12px 16px;margin-bottom:12px">
+          <div class="frow">
+            <label>Camión</label>
+            <select id="fvc" onchange="renderViajes()" style="background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:6px 10px;color:var(--txt);font-size:.85rem;outline:none;"><option value="">Todos</option></select>
+            <label>Mes</label>
+            <select id="fvm" onchange="renderViajes()" style="background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:6px 10px;color:var(--txt);font-size:.85rem;outline:none;">
+              <option value="">Todos</option>
+              <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option>
+              <option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option>
+              <option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+            </select>
+            <div style="margin-left:auto;font-size:.8rem;color:var(--dim)" id="vc-cnt"></div>
+          </div>
+        </div>
+        <div class="tw"><table><thead><tr><th>Fecha</th><th>Camión</th><th>Ruta</th><th>Km</th><th>Gasoil</th><th>Costo gasoil</th><th>Rend.</th><th>Adelanto</th><th>Gastos</th><th>Total</th><th></th></tr></thead><tbody id="tbv"></tbody></table></div>
+      </div>
+
+      <!-- CAMIONES -->
+      <div id="p-camiones" class="panel">
+        <div class="pgh"><div class="pgt"><em>🚛</em>Camiones</div></div>
+        <div style="display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start;">
+          <div class="card">
+            <div class="ct">Registrar camión</div>
+            <div class="fr2">
+              <div class="fg"><label>Patente</label><input id="cp" type="text" placeholder="ABC 123"/></div>
+              <div class="fg"><label>Rendimiento (km/L)</label><input id="cr" type="number" placeholder="Ej: 3.5" step=".1" min="0"/></div>
+            </div>
+            <div class="fr2">
+              <div class="fg"><label>Modelo</label><input id="cm2" type="text" placeholder="Ej: Scania R420"/></div>
+              <div class="fg"><label>Chofer asignado</label><input id="cch" type="text" placeholder="Nombre"/></div>
+            </div>
+            <button class="btn btn-p" onclick="addCam()">+ Agregar Camión</button>
+          </div>
+          <div class="cg" id="cg"></div>
+        </div>
+      </div>
+
+      <!-- TARIFAS -->
+      <div id="p-tarifas" class="panel">
+        <div class="pgh"><div class="pgt"><em>💰</em>Tarifas de viaje</div></div>
+        <div style="display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start;">
+          <div class="card">
+            <div class="ct">Nueva tarifa por ruta</div>
+            <div class="fg"><label>Origen</label><input id="tfo" type="text" placeholder="Ciudad de origen"/></div>
+            <div class="fg"><label>Destino</label><input id="tfd" type="text" placeholder="Ciudad de destino"/></div>
+            <div class="fr2">
+              <div class="fg"><label>Precio base ($)</label><input id="tfp" type="number" placeholder="0.00" min="0"/></div>
+              <div class="fg"><label>Moneda</label><select id="tfm"><option value="ARS">Pesos ($)</option><option value="USD">Dólares (U$D)</option></select></div>
+            </div>
+            <div class="fg"><label>Observaciones</label><input id="tfobs" type="text" placeholder="Notas"/></div>
+            <button class="btn btn-p" onclick="addTarifa()">+ Guardar Tarifa</button>
+          </div>
+          <div id="lt"></div>
+        </div>
+      </div>
+
+      <!-- LIQUIDACION -->
+      <div id="p-liquidacion" class="panel">
+        <div class="pgh"><div class="pgt"><em>👷</em>Liquidación de chofer</div></div>
+        <div class="card" style="max-width:600px;margin-bottom:20px;">
+          <div class="ct">Calcular liquidación</div>
+          <div class="fr3">
+            <div class="fg"><label>Camión / Chofer</label><select id="lqc"><option value="">— Seleccionar —</option></select></div>
+            <div class="fg"><label>Desde</label><input id="lqd" type="date"/></div>
+            <div class="fg"><label>Hasta</label><input id="lqh" type="date"/></div>
+          </div>
+          <div class="fr2">
+            <div class="fg"><label>Sueldo fijo ($)</label><input id="lqf" type="number" placeholder="0.00" min="0"/></div>
+            <div class="fg"><label>% por viaje sobre tarifa</label><input id="lqpct" type="number" placeholder="0" min="0" max="100" step="0.5"/></div>
+          </div>
+          <div class="fr2">
+            <div class="fg"><label>Monto fijo por viaje ($)</label><input id="lqxv" type="number" placeholder="0.00" min="0"/></div>
+            <div class="fg"><label>Precio gasoil ($/L)</label><input id="lqgl" type="number" placeholder="Ej: 1200" min="0"/></div>
+          </div>
+          <button class="btn btn-p" onclick="calcLiq()">Calcular liquidación</button>
+        </div>
+        <div id="rlq"></div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div id="p-clientes" class="panel">
+        <div class="pgh">
+          <div class="pgt"><em>🤝</em>Clientes</div>
+          <button class="btn btn-p" onclick="toggleFC()">+ Nuevo Cliente</button>
+        </div>
+        <div id="ffc" style="display:none;margin-bottom:20px;">
+          <div class="card">
+            <div class="ct">Registrar cliente</div>
+            <div class="fr2">
+              <div class="fg"><label>Nombre / Empresa</label><input id="cln" type="text" placeholder="Razón social o nombre"/></div>
+              <div class="fg"><label>Tipo</label><select id="clt"><option>Empresa</option><option>Particular</option></select></div>
+            </div>
+            <div class="fr3">
+              <div class="fg"><label>CUIT / DNI</label><input id="clc" type="text" placeholder="20-12345678-9"/></div>
+              <div class="fg"><label>Teléfono</label><input id="cltel" type="text" placeholder="11 1234-5678"/></div>
+              <div class="fg"><label>Email</label><input id="clem" type="text" placeholder="correo@empresa.com"/></div>
+            </div>
+            <div class="fg"><label>Dirección</label><input id="cldir" type="text" placeholder="Calle, ciudad"/></div>
+            <div class="fg"><label>Observaciones</label><input id="clobs" type="text" placeholder="Notas"/></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-p" onclick="addCliente()">✓ Guardar cliente</button>
+              <button class="btn btn-o" onclick="toggleFC()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lcl"></div>
+      </div>
+
+      <!-- DETALLE CLIENTE -->
+      <div id="p-cliente-det" class="panel">
+        <div class="pgh">
+          <div class="pgt"><em>🤝</em><span id="dcln">Cliente</span></div>
+          <button class="btn btn-o" onclick="goP('clientes',document.querySelector('[onclick*=clientes]'))">← Volver</button>
+        </div>
+        <div class="two">
+          <div>
+            <div class="card" id="dcli" style="margin-bottom:12px"></div>
+            <div class="card">
+              <div class="ct">Nuevo documento</div>
+              <div class="fg"><label>Tipo</label><select id="dt"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Recibo</option><option>Presupuesto</option><option>Otro</option></select></div>
+              <div class="fr2">
+                <div class="fg"><label>Número</label><input id="dn" type="text" placeholder="0001-00012345"/></div>
+                <div class="fg"><label>Fecha</label><input id="dfe" type="date"/></div>
+              </div>
+              <div class="fr2">
+                <div class="fg"><label>Monto ($)</label><input id="dm" type="number" placeholder="0.00" min="0"/></div>
+                <div class="fg"><label>Estado</label><select id="de"><option>Pendiente</option><option>Cobrado</option><option>Anulado</option></select></div>
+              </div>
+              <div class="fg"><label>Descripción</label><input id="dd2" type="text" placeholder="Detalle"/></div>
+              <button class="btn btn-p" onclick="addDocC()">+ Agregar documento</button>
+            </div>
+          </div>
+          <div>
+            <div class="ct">Historial de documentos</div>
+            <div id="ldcl"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROVEEDORES -->
+      <div id="p-proveedores" class="panel">
+        <div class="pgh">
+          <div class="pgt"><em>🏭</em>Proveedores</div>
+          <button class="btn btn-p" onclick="toggleFP()">+ Nuevo Proveedor</button>
+        </div>
+        <div id="ffp" style="display:none;margin-bottom:20px;">
+          <div class="card">
+            <div class="ct">Registrar proveedor</div>
+            <div class="fr2">
+              <div class="fg"><label>Nombre / Empresa</label><input id="pvn" type="text" placeholder="Razón social"/></div>
+              <div class="fg"><label>Rubro</label><select id="pvr"><option>Combustible</option><option>Neumáticos</option><option>Repuestos</option><option>Mecánica</option><option>Seguros</option><option>Peajes</option><option>Otro</option></select></div>
+            </div>
+            <div class="fr3">
+              <div class="fg"><label>CUIT</label><input id="pvc" type="text" placeholder="20-12345678-9"/></div>
+              <div class="fg"><label>Teléfono</label><input id="pvt" type="text" placeholder="11 1234-5678"/></div>
+              <div class="fg"><label>Contacto</label><input id="pvco" type="text" placeholder="Nombre"/></div>
+            </div>
+            <div class="fg"><label>Observaciones</label><input id="pvobs" type="text" placeholder="Notas"/></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-p" onclick="addProv()">✓ Guardar proveedor</button>
+              <button class="btn btn-o" onclick="toggleFP()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lpv"></div>
+      </div>
+
+      <!-- DETALLE PROVEEDOR -->
+      <div id="p-proveedor-det" class="panel">
+        <div class="pgh">
+          <div class="pgt"><em>🏭</em><span id="dpvn">Proveedor</span></div>
+          <button class="btn btn-o" onclick="goP('proveedores',document.querySelector('[onclick*=proveedores]'))">← Volver</button>
+        </div>
+        <div class="two">
+          <div>
+            <div class="card" id="dpvi" style="margin-bottom:12px"></div>
+            <div class="card">
+              <div class="ct">Nueva compra / documento</div>
+              <div class="fg"><label>Tipo</label><select id="pdt"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Recibo</option><option>Ticket</option><option>Otro</option></select></div>
+              <div class="fr2">
+                <div class="fg"><label>Número</label><input id="pdn" type="text" placeholder="0001-00012345"/></div>
+                <div class="fg"><label>Fecha</label><input id="pdf2" type="date"/></div>
+              </div>
+              <div class="fr2">
+                <div class="fg"><label>Monto ($)</label><input id="pdm" type="number" placeholder="0.00" min="0"/></div>
+                <div class="fg"><label>Estado</label><select id="pde"><option>Pendiente</option><option>Pagado</option><option>Anulado</option></select></div>
+              </div>
+              <div class="fg"><label>Descripción</label><input id="pdd" type="text" placeholder="Qué se compró"/></div>
+              <button class="btn btn-p" onclick="addDocP()">+ Agregar documento</button>
+            </div>
+          </div>
+          <div>
+            <div class="ct">Historial de compras</div>
+            <div id="ldpv"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESUMEN -->
+      <div id="p-resumen" class="panel">
+        <div class="pgh"><div class="pgt"><em>📈</em>Resumen por camión</div></div>
+        <div class="sg" id="rsg"></div>
+        <div class="rcg" id="rcg"></div>
+      </div>
+
+      <!-- IMPRESION -->
+      <div id="p-impresion" class="panel">
+        <div class="pgh"><div class="pgt"><em>🖨️</em>Imprimir informes</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+          <div class="card">
+            <div class="ct">Resumen de viajes</div>
+            <div class="fg"><label>Camión (opcional)</label><select id="ic"><option value="">Todos los camiones</option></select></div>
+            <div class="fr2">
+              <div class="fg"><label>Desde</label><input id="id2" type="date"/></div>
+              <div class="fg"><label>Hasta</label><input id="ih" type="date"/></div>
+            </div>
+            <button class="btn btn-p" onclick="impViajes()">🖨️ Imprimir resumen</button>
+          </div>
+          <div class="card">
+            <div class="ct">Resumen por camión</div>
+            <p style="font-size:.85rem;color:var(--dim);margin-bottom:14px;line-height:1.6">Imprime el resumen completo de todos los camiones con km, gasoil, gastos y totales.</p>
+            <button class="btn btn-p" onclick="impResumen()">🖨️ Imprimir por camión</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIG -->
+      <div id="p-config" class="panel">
+        <div class="pgh"><div class="pgt"><em>⚙️</em>Configuración</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start">
+          <div class="card">
+            <div class="ct">Cambiar credenciales</div>
+            <div class="fg"><label>Nuevo usuario</label><input id="cfu" type="text" placeholder="Nuevo usuario"/></div>
+            <div class="fg"><label>Nueva contraseña</label><input id="cfp1" type="password" placeholder="Nueva contraseña"/></div>
+            <div class="fg"><label>Repetir contraseña</label><input id="cfp2" type="password" placeholder="Repetir contraseña"/></div>
+            <button class="btn btn-p" onclick="saveConfig()">Guardar cambios</button>
+            <div id="cfmsg" style="font-size:.8rem;margin-top:10px;display:none"></div>
+          </div>
+          <div class="card">
+            <div class="ct">Backup de datos</div>
+            <p style="font-size:.85rem;color:var(--dim);margin-bottom:14px;line-height:1.6">Los datos están guardados en Supabase (nube). El backup es un respaldo adicional en JSON.</p>
+            <button class="btn btn-p" onclick="exportData()" style="margin-bottom:10px">💾 Exportar backup (JSON)</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mbg" id="mbg"><div class="modal"><div class="mtt"><span>Detalle del viaje</span><button class="mc" onclick="closeMod()">✕</button></div><div id="mbd"></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== SUPABASE ====================
+const SBU='https://oyouscolubayfpwgaocg.supabase.co';
+const SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95b3VzY29sdWJheWZwd2dhb2NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDk4NzcsImV4cCI6MjA5NjUyNTg3N30.iWzYVGLtxgs5Tm5fMGvd7mX-Kmi05KPG_duQ8XfmcmU';
+
+async function sb(path,method,body){
+  const h={'apikey':SBK,'Authorization':'Bearer '+SBK,'Content-Type':'application/json'};
+  if(method==='POST')h['Prefer']='return=representation';
+  const r=await fetch(SBU+'/rest/v1/'+path,{method:method||'GET',headers:h,body:body?JSON.stringify(body):undefined});
+  if(!r.ok){console.error('SB',await r.text());return null;}
+  const t=await r.text();
+  return t?JSON.parse(t):null;
+}
+
+// ==================== DATA ====================
+var D={camiones:[],viajes:[],tarifas:[],clientes:[],proveedores:[]};
+
+function loading(on){
+  var el=document.getElementById('lov');
+  el.style.display=on?'flex':'none';
+}
+
+async function loadAll(){
+  loading(true);
+  try{
+    var res=await Promise.all([
+      sb('camiones?select=*&order=id'),
+      sb('viajes?select=*&order=f.desc'),
+      sb('tarifas?select=*&order=id'),
+      sb('clientes?select=*&order=nom'),
+      sb('proveedores?select=*&order=nom')
+    ]);
+    D.camiones=res[0]||[];
+    D.viajes=(res[1]||[]).map(function(v){v.cid=Number(v.cid);v.gs=v.gs||[];return v;});
+    D.tarifas=res[2]||[];
+    D.clientes=(res[3]||[]).map(function(c){c.docs=c.docs||[];return c;});
+    D.proveedores=(res[4]||[]).map(function(p){p.docs=p.docs||[];return p;});
+  }catch(e){console.error(e);}
+  loading(false);
+}
+
+// ==================== AUTH ====================
+function getCreds(){return JSON.parse(localStorage.getItem('fc_creds')||'{"user":"admin","pass":"flota123"}')}
+function saveCreds(c){localStorage.setItem('fc_creds',JSON.stringify(c));}
+
+async function doLogin(){
+  var u=document.getElementById('lu').value.trim();
+  var p=document.getElementById('lp').value;
+  var c=getCreds();
+  if(u===c.user&&p===c.pass){
+    document.getElementById('login-screen').style.display='none';
+    var app=document.getElementById('app');
+    app.style.display='flex';
+    document.getElementById('tbu').textContent=u;
+    await loadAll();
+    renderDash();
+    renderCamiones();
+    syncSels();
+  } else {
+    var e=document.getElementById('lerr');
+    e.style.display='block';
+    setTimeout(function(){e.style.display='none';},3000);
+  }
+}
+
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('lp').value='';
+  document.getElementById('lu').value='';
+}
+
+// ==================== NAV ====================
+function goP(p,el){
+  document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+  document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('on');});
+  document.getElementById('p-'+p).classList.add('on');
+  if(el)el.classList.add('on');
+  if(p==='dashboard')renderDash();
+  if(p==='viajes'){syncSels();renderViajes();}
+  if(p==='camiones')renderCamiones();
+  if(p==='tarifas')renderTarifas();
+  if(p==='liquidacion')syncLq();
+  if(p==='clientes')renderClientes();
+  if(p==='proveedores')renderProveedores();
+  if(p==='resumen')renderResumen();
+  if(p==='impresion')syncSels();
+}
+
+// ==================== TOAST ====================
+function toast(msg,col){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=col||'var(--green)';t.style.color=col?'#fff':'#000';
+  t.classList.add('on');setTimeout(function(){t.classList.remove('on');},2500);
+}
+
+// ==================== SYNC SELECTS ====================
+function syncSels(){
+  var o=D.camiones.map(function(c){return '<option value="'+c.id+'">'+c.patente+(c.chofer?' – '+c.chofer:'')+'</option>';}).join('');
+  ['vc','fvc','lqc','ic'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var pre=id==='fvc'||id==='ic'?'<option value="">Todos</option>':'<option value="">— Seleccionar —</option>';
+    el.innerHTML=pre+o;
+  });
+}
+
+// ==================== CAMIONES ====================
+async function addCam(){
+  var p=document.getElementById('cp').value.trim().toUpperCase();
+  var r=parseFloat(document.getElementById('cr').value)||0;
+  var m=document.getElementById('cm2').value.trim();
+  var c=document.getElementById('cch').value.trim();
+  if(!p){alert('Ingresá la patente.');return;}
+  if(D.camiones.find(function(x){return x.patente===p;})){alert('Ya existe ese camión.');return;}
+  loading(true);
+  var res=await sb('camiones','POST',{id:Date.now(),patente:p,rend:r,modelo:m,chofer:c});
+  if(res&&res[0]){D.camiones.push(res[0]);}
+  loading(false);
+  renderCamiones();syncSels();
+  ['cp','cr','cm2','cch'].forEach(function(id){document.getElementById(id).value='';});
+  toast('✅ Camión registrado');
+}
+
+async function delCam(id){
+  if(!confirm('¿Eliminar este camión y sus viajes?'))return;
+  loading(true);
+  await sb('camiones?id=eq.'+id,'DELETE');
+  D.camiones=D.camiones.filter(function(x){return x.id!==id;});
+  D.viajes=D.viajes.filter(function(x){return x.cid!==id;});
+  loading(false);
+  renderCamiones();syncSels();toast('🗑️ Eliminado','var(--red)');
+}
+
+function renderCamiones(){
+  var el=document.getElementById('cg');
+  if(!D.camiones.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🚛</div>Sin camiones aún.</div>';return;}
+  el.innerHTML=D.camiones.map(function(c){
+    var vs=D.viajes.filter(function(v){return v.cid===c.id;});
+    var tot=vs.reduce(function(s,v){return s+tvTot(v);},0);
+    return '<div class="cc"><div style="position:absolute;top:10px;right:10px"><button class="btn-del" onclick="delCam('+c.id+')">✕</button></div>'+
+      '<div class="cp">🚛 '+c.patente+'</div>'+
+      (c.modelo?'<div class="cm">'+c.modelo+'</div>':'')+
+      (c.chofer?'<div class="cm">👤 '+c.chofer+'</div>':'')+
+      (c.rend?'<div class="cm">⛽ '+c.rend+' km/L</div>':'')+
+      '<div class="cs">$'+tot.toLocaleString('es-AR')+' · '+vs.length+' viaje(s)</div></div>';
+  }).join('');
+}
+
+// ==================== VIAJES ====================
+var gfR=[];
+var editVId=null;
+
+function showFV(){document.getElementById('fv').style.display='block';syncSels();}
+function hideFV(){document.getElementById('fv').style.display='none';gfR=[];renderGF();editVId=null;document.getElementById('fv-title').textContent='Registrar nuevo viaje';document.getElementById('fv-btn').textContent='✓ Guardar Viaje';}
+
+function addGF(){gfR.push({id:Date.now()});renderGF();}
+function delGF(id){gfR=gfR.filter(function(x){return x.id!==id;});renderGF();}
+function renderGF(){
+  var el=document.getElementById('gfl');
+  if(!gfR.length){el.innerHTML='';return;}
+  el.innerHTML=gfR.map(function(f){
+    return '<div class="gi"><select id="gt-'+f.id+'"><option>Peaje</option><option>Viáticos</option><option>Neumáticos</option><option>Reparación</option><option>Estadía</option><option>Comida</option><option>Otro</option></select><input id="gm-'+f.id+'" type="number" placeholder="$0" min="0"/><button class="xb" onclick="delGF('+f.id+')">✕</button></div>';
+  }).join('');
+}
+
+function getGastos(){
+  return gfR.map(function(f){
+    return {tipo:document.getElementById('gt-'+f.id)?document.getElementById('gt-'+f.id).value:'',monto:parseFloat(document.getElementById('gm-'+f.id)?document.getElementById('gm-'+f.id).value:0)||0};
+  }).filter(function(g){return g.monto>0;});
+}
+
+function calcL(){
+  var cid=parseInt(document.getElementById('vc').value);
+  var km=parseFloat(document.getElementById('vk').value)||0;
+  var cam=D.camiones.find(function(c){return c.id===cid;});
+  var rh=document.getElementById('rh');
+  if(cam&&cam.rend>0&&km>0){document.getElementById('vl').value=(km/cam.rend).toFixed(1);rh.style.display='block';}
+  else{rh.style.display='none';}
+}
+
+async function guardarViaje(){
+  var cid=parseInt(document.getElementById('vc').value);
+  var f=document.getElementById('vf').value;
+  var o=document.getElementById('vo').value.trim();
+  var d=document.getElementById('vd').value.trim();
+  var km=parseFloat(document.getElementById('vk').value)||0;
+  var lt=parseFloat(document.getElementById('vl').value)||0;
+  var pgl=parseFloat(document.getElementById('vpgl').value)||0;
+  var adv=parseFloat(document.getElementById('va').value)||0;
+  var obs=document.getElementById('vobs').value.trim();
+  var gs=getGastos();
+  if(!cid){alert('Seleccioná un camión.');return;}
+  if(!f){alert('Ingresá la fecha.');return;}
+  if(!o||!d){alert('Ingresá origen y destino.');return;}
+  loading(true);
+  if(editVId){
+    var data={cid:cid,f:f,o:o,d:d,km:km,lt:lt,pgl:pgl,adv:adv,gs:gs,obs:obs};
+    await sb('viajes?id=eq.'+editVId,'PATCH',data);
+    var idx=D.viajes.findIndex(function(v){return v.id===editVId;});
+    if(idx>=0)D.viajes[idx]=Object.assign(D.viajes[idx],data);
+    toast('✅ Viaje actualizado');
+  } else {
+    var nv={id:Date.now(),cid:cid,f:f,o:o,d:d,km:km,lt:lt,pgl:pgl,adv:adv,gs:gs,obs:obs};
+    var res=await sb('viajes','POST',nv);
+    D.viajes.unshift(res&&res[0]?res[0]:nv);
+    toast('✅ Viaje guardado');
+  }
+  loading(false);
+  ['vk','vl','vpgl','va','vobs','vo','vd'].forEach(function(id){document.getElementById(id).value='';});
+  gfR=[];renderGF();document.getElementById('rh').style.display='none';
+  hideFV();renderViajes();renderDash();
+}
+
+async function delViaje(id){
+  if(!confirm('¿Eliminar este viaje?'))return;
+  loading(true);
+  await sb('viajes?id=eq.'+id,'DELETE');
+  D.viajes=D.viajes.filter(function(v){return v.id!==id;});
+  loading(false);
+  renderViajes();renderDash();toast('🗑️ Viaje eliminado','var(--red)');
+}
+
+function editViaje(id){
+  var v=D.viajes.find(function(x){return x.id===id;});
+  if(!v)return;
+  editVId=id;
+  showFV();syncSels();
+  document.getElementById('vc').value=v.cid;
+  document.getElementById('vf').value=v.f;
+  document.getElementById('vo').value=v.o;
+  document.getElementById('vd').value=v.d;
+  document.getElementById('vk').value=v.km||'';
+  document.getElementById('vl').value=v.lt||'';
+  document.getElementById('vpgl').value=v.pgl||'';
+  document.getElementById('va').value=v.adv||'';
+  document.getElementById('vobs').value=v.obs||'';
+  gfR=(v.gs||[]).map(function(g){return {id:Date.now()+Math.random(),tipo:g.tipo,monto:g.monto};});
+  renderGF();
+  setTimeout(function(){
+    gfR.forEach(function(f){
+      var ts=document.getElementById('gt-'+f.id);
+      var ms=document.getElementById('gm-'+f.id);
+      if(ts)ts.value=f.tipo;
+      if(ms)ms.value=f.monto;
+    });
+  },100);
+  document.getElementById('fv-title').textContent='✏️ Editar viaje';
+  document.getElementById('fv-btn').textContent='✓ Actualizar Viaje';
+  document.getElementById('fv').scrollIntoView({behavior:'smooth'});
+}
+
+function tvTot(v){return ((v.gs||[]).reduce(function(s,g){return s+g.monto;},0))+(v.adv||0);}
+var TICO={Peaje:'🛣️','Viáticos':'🍽️','Neumáticos':'🔵',Reparación:'🔧',Estadía:'🏨',Comida:'🥗',Otro:'📦'};
+var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function renderViajes(){
+  syncSels();
+  var fc=document.getElementById('fvc').value;
+  var fm=document.getElementById('fvm').value;
+  var vs=[...D.viajes];
+  if(fc)vs=vs.filter(function(v){return String(v.cid)===String(fc);});
+  if(fm)vs=vs.filter(function(v){return parseInt(v.f.split('-')[1])-1===MESES.indexOf(fm);});
+  var cnt=document.getElementById('vc-cnt');
+  if(cnt)cnt.textContent=vs.length+' viaje(s)';
+  var tb=document.getElementById('tbv');
+  if(!vs.length){tb.innerHTML='<tr><td colspan="11"><div class="empty"><div class="ei">🗺️</div>No hay viajes.</div></td></tr>';return;}
+  tb.innerHTML=vs.map(function(v){
+    var cam=D.camiones.find(function(c){return c.id===v.cid;});
+    var pat=cam?cam.patente:'?';
+    var tot=tvTot(v);
+    var rr=(v.km&&v.lt)?(v.km/v.lt).toFixed(1)+' km/L':'—';
+    var cg=(v.pgl&&v.lt)?'$'+(v.pgl*v.lt).toLocaleString('es-AR'):'—';
+    var sg=(v.gs||[]).reduce(function(s,g){return s+g.monto;},0);
+    return '<tr><td class="td">'+fmt(v.f)+'</td><td><span style="background:rgba(56,189,248,.1);color:var(--blue);font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;">'+pat+'</span></td>'+
+      '<td style="font-weight:600;white-space:nowrap">'+v.o+'<span style="color:var(--acc);margin:0 4px">→</span>'+v.d+'</td>'+
+      '<td class="td">'+(v.km?v.km.toLocaleString('es-AR'):'—')+'</td>'+
+      '<td class="td">'+(v.lt?v.lt+'L':'—')+'</td>'+
+      '<td class="td">'+cg+'</td>'+
+      '<td class="ty">'+rr+'</td>'+
+      '<td class="td">'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—')+'</td>'+
+      '<td class="td">'+(sg>0?'$'+sg.toLocaleString('es-AR'):'—')+'</td>'+
+      '<td class="ta">$'+tot.toLocaleString('es-AR')+'</td>'+
+      '<td><button class="btn-del" onclick="showDet('+v.id+')">Ver</button> <button class="btn-del" style="color:var(--blue)" onclick="editViaje('+v.id+')">✏️</button> <button class="btn-del" onclick="delViaje('+v.id+')">✕</button></td></tr>';
+  }).join('');
+}
+
+function showDet(id){
+  var v=D.viajes.find(function(x){return x.id===id;});
+  if(!v)return;
+  var cam=D.camiones.find(function(c){return c.id===v.cid;});
+  var tot=tvTot(v);
+  var rr=(v.km&&v.lt)?(v.km/v.lt).toFixed(1)+' km/L':'—';
+  var gRows=(v.gs||[]).map(function(g){return '<div class="dr"><span>'+(TICO[g.tipo]||'📦')+' '+g.tipo+'</span><span>$'+g.monto.toLocaleString('es-AR')+'</span></div>';}).join('');
+  document.getElementById('mbd').innerHTML=
+    '<div class="dr"><span>📅 Fecha</span><span>'+fmt(v.f)+'</span></div>'+
+    '<div class="dr"><span>🚛 Camión</span><span>'+(cam?cam.patente+'  '+(cam.chofer||''):'?')+'</span></div>'+
+    '<div class="dr"><span>📍 Origen</span><span>'+v.o+'</span></div>'+
+    '<div class="dr"><span>🏁 Destino</span><span>'+v.d+'</span></div>'+
+    '<div class="dr"><span>📏 Kilómetros</span><span>'+(v.km?v.km.toLocaleString('es-AR')+' km':'—')+'</span></div>'+
+    '<div class="dr"><span>⛽ Gasoil</span><span>'+(v.lt?v.lt+' L':'—')+'</span></div>'+
+    '<div class="dr"><span>📈 Rendimiento</span><span>'+rr+'</span></div>'+
+    '<div class="dr"><span>💵 Adelanto</span><span>'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—')+'</span></div>'+
+    gRows+(v.obs?'<div class="dr"><span>📝 Notas</span><span>'+v.obs+'</span></div>':'')+
+    '<div class="dr tot"><span>TOTAL VIAJE</span><span>$'+tot.toLocaleString('es-AR')+'</span></div>';
+  document.getElementById('mbg').classList.add('on');
+}
+function closeMod(){document.getElementById('mbg').classList.remove('on');}
+document.getElementById('mbg').addEventListener('click',function(e){if(e.target===this)closeMod();});
+
+// ==================== TARIFAS ====================
+async function addTarifa(){
+  var o=document.getElementById('tfo').value.trim();
+  var d=document.getElementById('tfd').value.trim();
+  var p=parseFloat(document.getElementById('tfp').value)||0;
+  var m=document.getElementById('tfm').value;
+  var obs=document.getElementById('tfobs').value.trim();
+  if(!o||!d){alert('Ingresá origen y destino.');return;}
+  if(!p){alert('Ingresá el precio.');return;}
+  loading(true);
+  var res=await sb('tarifas','POST',{id:Date.now(),o:o,d:d,p:p,m:m,obs:obs});
+  if(res&&res[0])D.tarifas.push(res[0]);
+  loading(false);
+  renderTarifas();
+  ['tfo','tfd','tfp','tfobs'].forEach(function(id){document.getElementById(id).value='';});
+  toast('✅ Tarifa guardada');
+}
+
+async function delTarifa(id){
+  if(!confirm('¿Eliminar esta tarifa?'))return;
+  loading(true);
+  await sb('tarifas?id=eq.'+id,'DELETE');
+  D.tarifas=D.tarifas.filter(function(t){return t.id!==id;});
+  loading(false);
+  renderTarifas();toast('🗑️ Eliminada','var(--red)');
+}
+
+function renderTarifas(){
+  var el=document.getElementById('lt');
+  if(!D.tarifas.length){el.innerHTML='<div class="empty"><div class="ei">💰</div>Sin tarifas.</div>';return;}
+  el.innerHTML='<div class="tw"><table><thead><tr><th>Origen</th><th>Destino</th><th>Precio</th><th>Moneda</th><th>Notas</th><th></th></tr></thead><tbody>'+
+    D.tarifas.map(function(t){
+      return '<tr><td>'+t.o+'</td><td>'+t.d+'</td><td class="ta">'+(t.m==='USD'?'U$D':'$')+t.p.toLocaleString('es-AR')+'</td><td class="td">'+t.m+'</td><td class="td">'+(t.obs||'—')+'</td><td><button class="btn-del" onclick="delTarifa('+t.id+')">✕</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+// ==================== LIQUIDACION ====================
+function syncLq(){
+  var o=D.camiones.map(function(c){return '<option value="'+c.id+'">'+c.patente+(c.chofer?' – '+c.chofer:'')+'</option>';}).join('');
+  document.getElementById('lqc').innerHTML='<option value="">— Seleccionar —</option>'+o;
+}
+
+function calcLiq(){
+  var cid=parseInt(document.getElementById('lqc').value);
+  var desde=document.getElementById('lqd').value;
+  var hasta=document.getElementById('lqh').value;
+  var fijo=parseFloat(document.getElementById('lqf').value)||0;
+  var pct=parseFloat(document.getElementById('lqpct').value)||0;
+  var xv=parseFloat(document.getElementById('lqxv').value)||0;
+  var pgl=parseFloat(document.getElementById('lqgl').value)||0;
+  if(!cid){alert('Seleccioná un camión.');return;}
+  var cam=D.camiones.find(function(c){return c.id===cid;});
+  var vs=D.viajes.filter(function(v){return v.cid===cid;});
+  if(desde)vs=vs.filter(function(v){return v.f>=desde;});
+  if(hasta)vs=vs.filter(function(v){return v.f<=hasta;});
+  if(!vs.length){document.getElementById('rlq').innerHTML='<div class="empty"><div class="ei">📋</div>Sin viajes en ese período.</div>';return;}
+  var tkm=vs.reduce(function(s,v){return s+(v.km||0);},0);
+  var tlt=vs.reduce(function(s,v){return s+(v.lt||0);},0);
+  var tadv=vs.reduce(function(s,v){return s+(v.adv||0);},0);
+  var cgasoil=pgl>0?tlt*pgl:0;
+  var ttar=vs.reduce(function(s,v){
+    var tf=D.tarifas.find(function(t){return t.o.toLowerCase()===v.o.toLowerCase()&&t.d.toLowerCase()===v.d.toLowerCase();});
+    return s+(tf?tf.p:0);
+  },0);
+  var porPct=pct>0?(ttar*pct/100):0;
+  var porViaje=xv>0?xv*vs.length:0;
+  var bruto=fijo+porPct+porViaje;
+  var neto=bruto-tadv;
+  window._lq={cam:cam,vs:vs,tkm:tkm,tlt:tlt,cgasoil:cgasoil,fijo:fijo,porPct:porPct,pct:pct,ttar:ttar,porViaje:porViaje,xv:xv,bruto:bruto,tadv:tadv,neto:neto,desde:desde,hasta:hasta};
+  document.getElementById('rlq').innerHTML=
+    '<div class="card" style="max-width:600px">'+
+    '<div class="ct">📋 '+cam.patente+(cam.chofer?' / '+cam.chofer:'')+'</div>'+
+    '<div style="font-size:.78rem;color:var(--dim);margin-bottom:12px">'+(desde?fmt(desde):'inicio')+' al '+(hasta?fmt(hasta):'hoy')+'</div>'+
+    '<div class="rf"><span>🗺️ Viajes</span><strong>'+vs.length+'</strong></div>'+
+    '<div class="rf"><span>📍 Km</span><strong>'+tkm.toLocaleString('es-AR')+' km</strong></div>'+
+    '<div class="rf"><span>⛽ Gasoil</span><strong>'+tlt.toLocaleString('es-AR')+' L</strong></div>'+
+    (cgasoil>0?'<div class="rf"><span>💧 Costo gasoil</span><strong>$'+cgasoil.toLocaleString('es-AR')+'</strong></div>':'')+
+    (fijo>0?'<div class="rf"><span>💵 Sueldo fijo</span><strong style="color:var(--green)">$'+fijo.toLocaleString('es-AR')+'</strong></div>':'')+
+    (porPct>0?'<div class="rf"><span>📊 '+pct+'% sobre tarifas</span><strong style="color:var(--green)">$'+porPct.toLocaleString('es-AR')+'</strong></div>':'')+
+    (porViaje>0?'<div class="rf"><span>🚛 Fijo x viaje ('+vs.length+'×$'+xv.toLocaleString('es-AR')+')</span><strong style="color:var(--green)">$'+porViaje.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="rf"><span>TOTAL BRUTO</span><strong style="color:var(--acc)">$'+bruto.toLocaleString('es-AR')+'</strong></div>'+
+    (tadv>0?'<div class="rf"><span>➖ Adelantos</span><strong style="color:var(--red)">-$'+tadv.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="rf" style="border-top:2px solid var(--acc);margin-top:6px;padding-top:8px"><span style="font-family:Oswald,sans-serif;font-size:1rem;font-weight:700">A PAGAR</span><strong style="color:var(--green);font-size:1.2rem;font-family:Oswald,sans-serif">$'+neto.toLocaleString('es-AR')+'</strong></div>'+
+    '<button class="btn btn-p" style="margin-top:12px" onclick="impLiq()">🖨️ Imprimir liquidación</button></div>';
+}
+
+// ==================== CLIENTES ====================
+function toggleFC(){var f=document.getElementById('ffc');f.style.display=f.style.display==='none'?'block':'none';}
+
+async function addCliente(){
+  var nom=document.getElementById('cln').value.trim();
+  if(!nom){alert('Ingresá el nombre.');return;}
+  var obj={id:Date.now(),nom:nom,tipo:document.getElementById('clt').value,cuit:document.getElementById('clc').value.trim(),tel:document.getElementById('cltel').value.trim(),email:document.getElementById('clem').value.trim(),dir:document.getElementById('cldir').value.trim(),obs:document.getElementById('clobs').value.trim(),docs:[]};
+  loading(true);
+  var res=await sb('clientes','POST',obj);
+  if(res&&res[0])D.clientes.push(res[0]);
+  else D.clientes.push(obj);
+  loading(false);
+  renderClientes();
+  ['cln','clc','cltel','clem','cldir','clobs'].forEach(function(id){document.getElementById(id).value='';});
+  toggleFC();toast('✅ Cliente guardado');
+}
+
+async function delCliente(id){
+  if(!confirm('¿Eliminar este cliente?'))return;
+  loading(true);
+  await sb('clientes?id=eq.'+id,'DELETE');
+  D.clientes=D.clientes.filter(function(c){return c.id!==id;});
+  loading(false);
+  renderClientes();toast('🗑️ Eliminado','var(--red)');
+}
+
+function renderClientes(){
+  var el=document.getElementById('lcl');
+  if(!D.clientes.length){el.innerHTML='<div class="empty"><div class="ei">🤝</div>Sin clientes.</div>';return;}
+  el.innerHTML='<div class="tw"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>CUIT/DNI</th><th>Teléfono</th><th>Documentos</th><th>Total facturado</th><th></th></tr></thead><tbody>'+
+    D.clientes.map(function(c){
+      var docs=c.docs||[];
+      var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
+      var pend=docs.filter(function(d){return d.estado==='Pendiente';}).length;
+      return '<tr><td><strong style="cursor:pointer;color:var(--acc)" onclick="abrirCl('+c.id+')">'+c.nom+'</strong></td>'+
+        '<td class="td">'+c.tipo+'</td><td class="td">'+(c.cuit||'—')+'</td><td class="td">'+(c.tel||'—')+'</td>'+
+        '<td>'+docs.length+' doc'+(docs.length!==1?'s':'')+(pend>0?'<br><span style="color:var(--yellow);font-size:.72rem">'+pend+' pendiente(s)</span>':'')+'</td>'+
+        '<td class="ta">$'+tot.toLocaleString('es-AR')+'</td>'+
+        '<td><button class="btn btn-o" style="padding:4px 10px;font-size:.75rem;margin-right:4px" onclick="abrirCl('+c.id+')">Ver</button><button class="btn-del" onclick="delCliente('+c.id+')">✕</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+var clActivo=null;
+function abrirCl(id){
+  var c=D.clientes.find(function(x){return x.id===id;});
+  if(!c)return;
+  clActivo=id;
+  document.getElementById('dcln').textContent=c.nom;
+  document.getElementById('dcli').innerHTML='<div class="ct">Datos del cliente</div>'+
+    '<div class="rf"><span>Tipo</span><strong>'+c.tipo+'</strong></div>'+
+    (c.cuit?'<div class="rf"><span>CUIT/DNI</span><strong>'+c.cuit+'</strong></div>':'')+
+    (c.tel?'<div class="rf"><span>Teléfono</span><strong>'+c.tel+'</strong></div>':'')+
+    (c.email?'<div class="rf"><span>Email</span><strong>'+c.email+'</strong></div>':'')+
+    (c.dir?'<div class="rf"><span>Dirección</span><strong>'+c.dir+'</strong></div>':'')+
+    (c.obs?'<div class="rf"><span>Notas</span><strong>'+c.obs+'</strong></div>':'');
+  document.getElementById('dfe').valueAsDate=new Date();
+  renderDocsCl();
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('p-cliente-det').classList.add('on');
+  document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('on');});
+}
+
+async function addDocC(){
+  var c=D.clientes.find(function(x){return x.id===clActivo;});
+  if(!c)return;
+  var monto=parseFloat(document.getElementById('dm').value)||0;
+  var fecha=document.getElementById('dfe').value;
+  if(!fecha){alert('Ingresá la fecha.');return;}
+  if(!c.docs)c.docs=[];
+  c.docs.push({id:Date.now(),tipo:document.getElementById('dt').value,num:document.getElementById('dn').value.trim(),fecha:fecha,monto:monto,estado:document.getElementById('de').value,desc:document.getElementById('dd2').value.trim()});
+  loading(true);
+  await sb('clientes?id=eq.'+c.id,'PATCH',{docs:c.docs});
+  loading(false);
+  renderDocsCl();
+  ['dn','dm','dd2'].forEach(function(id){document.getElementById(id).value='';});
+  toast('✅ Documento agregado');
+}
+
+async function delDocC(docId){
+  var c=D.clientes.find(function(x){return x.id===clActivo;});
+  if(!c)return;
+  c.docs=c.docs.filter(function(d){return d.id!==docId;});
+  loading(true);
+  await sb('clientes?id=eq.'+c.id,'PATCH',{docs:c.docs});
+  loading(false);
+  renderDocsCl();toast('🗑️ Eliminado','var(--red)');
+}
+
+async function cambEstadoCl(docId,estado){
+  var c=D.clientes.find(function(x){return x.id===clActivo;});
+  if(!c)return;
+  var doc=c.docs.find(function(d){return d.id===docId;});
+  if(!doc)return;
+  doc.estado=estado;
+  loading(true);
+  await sb('clientes?id=eq.'+c.id,'PATCH',{docs:c.docs});
+  loading(false);
+  renderDocsCl();
+}
+
+function renderDocsCl(){
+  var c=D.clientes.find(function(x){return x.id===clActivo;});
+  var el=document.getElementById('ldcl');
+  if(!c||!el)return;
+  var docs=(c.docs||[]).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
+  if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos.</div>';return;}
+  var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
+  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.monto||0);},0);
+  el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">'+
+    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total facturado</div></div>'+
+    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente cobro</div></div>'+
+    '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    docs.map(function(d){
+      var sc=d.estado==='Cobrado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
+      return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
+        '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR')+'</td>'+
+        '<td><select onchange="cambEstadoCl('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
+        '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
+        '<option value="Cobrado"'+(d.estado==='Cobrado'?' selected':'')+'>✅ Cobrado</option>'+
+        '<option value="Anulado"'+(d.estado==='Anulado'?' selected':'')+'>❌ Anulado</option>'+
+        '</select></td><td><button class="btn-del" onclick="delDocC('+d.id+')">✕</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+// ==================== PROVEEDORES ====================
+function toggleFP(){var f=document.getElementById('ffp');f.style.display=f.style.display==='none'?'block':'none';}
+
+async function addProv(){
+  var nom=document.getElementById('pvn').value.trim();
+  if(!nom){alert('Ingresá el nombre.');return;}
+  var obj={id:Date.now(),nom:nom,rubro:document.getElementById('pvr').value,cuit:document.getElementById('pvc').value.trim(),tel:document.getElementById('pvt').value.trim(),cont:document.getElementById('pvco').value.trim(),obs:document.getElementById('pvobs').value.trim(),docs:[]};
+  loading(true);
+  var res=await sb('proveedores','POST',obj);
+  if(res&&res[0])D.proveedores.push(res[0]);
+  else D.proveedores.push(obj);
+  loading(false);
+  renderProveedores();
+  ['pvn','pvc','pvt','pvco','pvobs'].forEach(function(id){document.getElementById(id).value='';});
+  toggleFP();toast('✅ Proveedor guardado');
+}
+
+async function delProv(id){
+  if(!confirm('¿Eliminar este proveedor?'))return;
+  loading(true);
+  await sb('proveedores?id=eq.'+id,'DELETE');
+  D.proveedores=D.proveedores.filter(function(p){return p.id!==id;});
+  loading(false);
+  renderProveedores();toast('🗑️ Eliminado','var(--red)');
+}
+
+function renderProveedores(){
+  var el=document.getElementById('lpv');
+  if(!D.proveedores.length){el.innerHTML='<div class="empty"><div class="ei">🏭</div>Sin proveedores.</div>';return;}
+  el.innerHTML='<div class="tw"><table><thead><tr><th>Nombre</th><th>Rubro</th><th>CUIT</th><th>Teléfono</th><th>Documentos</th><th>Total comprado</th><th></th></tr></thead><tbody>'+
+    D.proveedores.map(function(p){
+      var docs=p.docs||[];
+      var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
+      var pend=docs.filter(function(d){return d.estado==='Pendiente';}).length;
+      return '<tr><td><strong style="cursor:pointer;color:var(--acc)" onclick="abrirPv('+p.id+')">'+p.nom+'</strong></td>'+
+        '<td class="td">'+p.rubro+'</td><td class="td">'+(p.cuit||'—')+'</td><td class="td">'+(p.tel||'—')+'</td>'+
+        '<td>'+docs.length+' doc'+(docs.length!==1?'s':'')+(pend>0?'<br><span style="color:var(--yellow);font-size:.72rem">'+pend+' pendiente(s)</span>':'')+'</td>'+
+        '<td class="ta">$'+tot.toLocaleString('es-AR')+'</td>'+
+        '<td><button class="btn btn-o" style="padding:4px 10px;font-size:.75rem;margin-right:4px" onclick="abrirPv('+p.id+')">Ver</button><button class="btn-del" onclick="delProv('+p.id+')">✕</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+var pvActivo=null;
+function abrirPv(id){
+  var p=D.proveedores.find(function(x){return x.id===id;});
+  if(!p)return;
+  pvActivo=id;
+  document.getElementById('dpvn').textContent=p.nom;
+  document.getElementById('dpvi').innerHTML='<div class="ct">Datos del proveedor</div>'+
+    '<div class="rf"><span>Rubro</span><strong>'+p.rubro+'</strong></div>'+
+    (p.cuit?'<div class="rf"><span>CUIT</span><strong>'+p.cuit+'</strong></div>':'')+
+    (p.tel?'<div class="rf"><span>Teléfono</span><strong>'+p.tel+'</strong></div>':'')+
+    (p.cont?'<div class="rf"><span>Contacto</span><strong>'+p.cont+'</strong></div>':'')+
+    (p.obs?'<div class="rf"><span>Notas</span><strong>'+p.obs+'</strong></div>':'');
+  document.getElementById('pdf2').valueAsDate=new Date();
+  renderDocsPv();
+  document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+  document.getElementById('p-proveedor-det').classList.add('on');
+  document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('on');});
+}
+
+async function addDocP(){
+  var p=D.proveedores.find(function(x){return x.id===pvActivo;});
+  if(!p)return;
+  var monto=parseFloat(document.getElementById('pdm').value)||0;
+  var fecha=document.getElementById('pdf2').value;
+  if(!fecha){alert('Ingresá la fecha.');return;}
+  if(!p.docs)p.docs=[];
+  p.docs.push({id:Date.now(),tipo:document.getElementById('pdt').value,num:document.getElementById('pdn').value.trim(),fecha:fecha,monto:monto,estado:document.getElementById('pde').value,desc:document.getElementById('pdd').value.trim()});
+  loading(true);
+  await sb('proveedores?id=eq.'+p.id,'PATCH',{docs:p.docs});
+  loading(false);
+  renderDocsPv();
+  ['pdn','pdm','pdd'].forEach(function(id){document.getElementById(id).value='';});
+  toast('✅ Documento agregado');
+}
+
+async function delDocP(docId){
+  var p=D.proveedores.find(function(x){return x.id===pvActivo;});
+  if(!p)return;
+  p.docs=p.docs.filter(function(d){return d.id!==docId;});
+  loading(true);
+  await sb('proveedores?id=eq.'+p.id,'PATCH',{docs:p.docs});
+  loading(false);
+  renderDocsPv();toast('🗑️ Eliminado','var(--red)');
+}
+
+async function cambEstadoPv(docId,estado){
+  var p=D.proveedores.find(function(x){return x.id===pvActivo;});
+  if(!p)return;
+  var doc=p.docs.find(function(d){return d.id===docId;});
+  if(!doc)return;
+  doc.estado=estado;
+  loading(true);
+  await sb('proveedores?id=eq.'+p.id,'PATCH',{docs:p.docs});
+  loading(false);
+  renderDocsPv();
+}
+
+function renderDocsPv(){
+  var p=D.proveedores.find(function(x){return x.id===pvActivo;});
+  var el=document.getElementById('ldpv');
+  if(!p||!el)return;
+  var docs=(p.docs||[]).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
+  if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos.</div>';return;}
+  var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
+  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.monto||0);},0);
+  el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">'+
+    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total comprado</div></div>'+
+    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente pago</div></div>'+
+    '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    docs.map(function(d){
+      var sc=d.estado==='Pagado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
+      return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
+        '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR')+'</td>'+
+        '<td><select onchange="cambEstadoPv('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
+        '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
+        '<option value="Pagado"'+(d.estado==='Pagado'?' selected':'')+'>✅ Pagado</option>'+
+        '<option value="Anulado"'+(d.estado==='Anulado'?' selected':'')+'>❌ Anulado</option>'+
+        '</select></td><td><button class="btn-del" onclick="delDocP('+d.id+')">✕</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+// ==================== DASHBOARD ====================
+function renderDash(){
+  var now=new Date();
+  var dd=document.getElementById('dd');
+  if(dd)dd.textContent=now.toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  var per=document.getElementById('dp')?document.getElementById('dp').value:'todo';
+  var hoy=now.toISOString().slice(0,10);
+  var y=now.getFullYear(),m=now.getMonth();
+  var vf=[...D.viajes];
+  if(per==='mes'){var d1=new Date(y,m,1).toISOString().slice(0,10);vf=vf.filter(function(v){return v.f>=d1&&v.f<=hoy;});}
+  else if(per==='ant'){var d1=new Date(y,m-1,1).toISOString().slice(0,10);var d2=new Date(y,m,0).toISOString().slice(0,10);vf=vf.filter(function(v){return v.f>=d1&&v.f<=d2;});}
+  else if(per==='tri'){var d1=new Date(y,m-2,1).toISOString().slice(0,10);vf=vf.filter(function(v){return v.f>=d1&&v.f<=hoy;});}
+  var tkm=vf.reduce(function(s,v){return s+(v.km||0);},0);
+  var tlt=vf.reduce(function(s,v){return s+(v.lt||0);},0);
+  var ttot=vf.reduce(function(s,v){return s+tvTot(v);},0);
+  var rp=tlt>0?(tkm/tlt).toFixed(1):'—';
+  var dsg=document.getElementById('dsg');
+  if(dsg)dsg.innerHTML='<div class="sc"><div class="sv">$'+abr(ttot)+'</div><div class="sl">Total gastos</div></div>'+
+    '<div class="sc blue"><div class="sv">'+vf.length+'</div><div class="sl">Viajes registrados</div></div>'+
+    '<div class="sc green"><div class="sv">'+abr(tkm)+'<small style="font-size:.85rem"> km</small></div><div class="sl">Kilómetros</div></div>'+
+    '<div class="sc yellow"><div class="sv">'+rp+'<small style="font-size:.8rem"> km/L</small></div><div class="sl">Rend. prom.</div></div>';
+  var duv=document.getElementById('duv');
+  var ult=vf.slice(0,5);
+  if(duv){
+    if(!ult.length){duv.innerHTML='<div class="empty"><div class="ei">🗺️</div>Sin viajes.</div>';return;}
+    duv.innerHTML='<div class="tw"><table><thead><tr><th>Fecha</th><th>Ruta</th><th>Total</th></tr></thead><tbody>'+
+      ult.map(function(v){var c=D.camiones.find(function(x){return x.id===v.cid;});return '<tr><td class="td">'+fmt(v.f)+'</td><td style="font-weight:600">'+v.o+'<span style="color:var(--acc);margin:0 4px">→</span>'+v.d+'<br><span class="td">'+(c?c.patente:'?')+'</span></td><td class="ta">$'+tvTot(v).toLocaleString('es-AR')+'</td></tr>';}).join('')+
+    '</tbody></table></div>';
+  }
+  var dca=document.getElementById('dca');
+  if(dca){
+    if(!D.camiones.length){dca.innerHTML='<div class="empty"><div class="ei">🚛</div>Sin camiones.</div>';return;}
+    dca.innerHTML=D.camiones.map(function(c){
+      var vs=D.viajes.filter(function(v){return v.cid===c.id;});
+      var tot=vs.reduce(function(s,v){return s+tvTot(v);},0);
+      return '<div style="background:var(--s1);border:1px solid var(--brd);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
+        '<div><div style="font-family:Oswald,sans-serif;font-weight:700;color:var(--acc)">'+c.patente+'</div><div style="font-size:.75rem;color:var(--dim)">'+(c.chofer||'Sin chofer')+'</div></div>'+
+        '<div style="text-align:right"><div style="font-family:Oswald,sans-serif;font-weight:700">$'+tot.toLocaleString('es-AR')+'</div><div style="font-size:.72rem;color:var(--dim)">'+vs.length+' viaje(s)</div></div></div>';
+    }).join('');
+  }
+}
+
+// ==================== RESUMEN ====================
+function renderResumen(){
+  var tkm=D.viajes.reduce(function(s,v){return s+(v.km||0);},0);
+  var tlt=D.viajes.reduce(function(s,v){return s+(v.lt||0);},0);
+  var ttot=D.viajes.reduce(function(s,v){return s+tvTot(v);},0);
+  var tadv=D.viajes.reduce(function(s,v){return s+(v.adv||0);},0);
+  var rs=document.getElementById('rsg');
+  if(rs)rs.innerHTML='<div class="sc"><div class="sv">$'+abr(ttot)+'</div><div class="sl">Total gastos</div></div>'+
+    '<div class="sc blue"><div class="sv">'+D.camiones.length+'</div><div class="sl">Camiones</div></div>'+
+    '<div class="sc green"><div class="sv">'+abr(tkm)+'<small style="font-size:.85rem"> km</small></div><div class="sl">Km totales</div></div>'+
+    '<div class="sc yellow"><div class="sv">$'+abr(tadv)+'</div><div class="sl">Adelantos</div></div>';
+  var el=document.getElementById('rcg');
+  if(!D.camiones.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">📈</div>Sin datos.</div>';return;}
+  el.innerHTML=D.camiones.map(function(c){
+    var vs=D.viajes.filter(function(v){return v.cid===c.id;});
+    var km=vs.reduce(function(s,v){return s+(v.km||0);},0);
+    var lt=vs.reduce(function(s,v){return s+(v.lt||0);},0);
+    var tot=vs.reduce(function(s,v){return s+tvTot(v);},0);
+    var adv=vs.reduce(function(s,v){return s+(v.adv||0);},0);
+    var rr=lt>0?(km/lt).toFixed(1):'—';
+    var pt={};
+    vs.forEach(function(v){(v.gs||[]).forEach(function(g){pt[g.tipo]=(pt[g.tipo]||0)+g.monto;});});
+    var tr2=Object.entries(pt).map(function(e){return '<div class="rf"><span>'+(TICO[e[0]]||'📦')+' '+e[0]+'</span><strong>$'+e[1].toLocaleString('es-AR')+'</strong></div>';}).join('');
+    return '<div class="rcc"><div class="rch"><div>'+
+      '<div style="font-family:Oswald,sans-serif;font-weight:700;font-size:1.05rem;color:var(--acc)">🚛 '+c.patente+'</div>'+
+      (c.chofer?'<div style="font-size:.72rem;color:var(--dim)">👤 '+c.chofer+'</div>':'')+
+      '</div><div style="font-family:Oswald,sans-serif;font-weight:700;font-size:1.1rem">$'+tot.toLocaleString('es-AR')+'</div></div>'+
+      '<div class="rcb">'+
+      '<div class="rf"><span>📍 Km</span><strong>'+km.toLocaleString('es-AR')+' km</strong></div>'+
+      '<div class="rf"><span>⛽ Gasoil</span><strong>'+lt.toLocaleString('es-AR')+' L</strong></div>'+
+      '<div class="rf"><span>📈 Rendimiento</span><strong>'+rr+' km/L</strong></div>'+
+      '<div class="rf"><span>💵 Adelantos</span><strong>$'+adv.toLocaleString('es-AR')+'</strong></div>'+
+      '<div class="rf"><span>🗺️ Viajes</span><strong>'+vs.length+'</strong></div>'+
+      tr2+'</div></div>';
+  }).join('');
+}
+
+// ==================== CONFIG ====================
+function saveConfig(){
+  var u=document.getElementById('cfu').value.trim();
+  var p1=document.getElementById('cfp1').value;
+  var p2=document.getElementById('cfp2').value;
+  var msg=document.getElementById('cfmsg');
+  if(!u){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Ingresá el usuario.';return;}
+  if(!p1){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Ingresá la contraseña.';return;}
+  if(p1!==p2){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Las contraseñas no coinciden.';return;}
+  saveCreds({user:u,pass:p1});
+  msg.style.display='block';msg.style.color='var(--green)';msg.textContent='✅ Credenciales actualizadas.';
+  document.getElementById('tbu').textContent=u;
+  ['cfu','cfp1','cfp2'].forEach(function(id){document.getElementById(id).value='';});
+}
+
+// ==================== IMPRESION ====================
+function impViajes(){
+  var cid=document.getElementById('ic').value;
+  var desde=document.getElementById('id2').value;
+  var hasta=document.getElementById('ih').value;
+  var vs=[...D.viajes].sort(function(a,b){return a.f.localeCompare(b.f);});
+  if(cid)vs=vs.filter(function(v){return String(v.cid)===String(cid);});
+  if(desde)vs=vs.filter(function(v){return v.f>=desde;});
+  if(hasta)vs=vs.filter(function(v){return v.f<=hasta;});
+  var cam=cid?D.camiones.find(function(c){return String(c.id)===String(cid);}):null;
+  var tG=vs.reduce(function(s,v){return s+tvTot(v);},0);
+  var tKm=vs.reduce(function(s,v){return s+(v.km||0);},0);
+  var w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen de Viajes</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:4px;}h2{font-size:1rem;color:#555;font-weight:normal;margin-bottom:20px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid #ccc;}td{padding:7px 10px;border-bottom:1px solid #eee;}.tot{font-weight:700;}.res{background:#f9f9f9;padding:14px;border-radius:8px;margin-bottom:20px;display:flex;gap:30px;}.ri{text-align:center;}.rv{font-size:1.4rem;font-weight:700;color:#f97316;}.rl{font-size:.7rem;text-transform:uppercase;color:#888;}@media print{button{display:none!important;}}</style></head><body>'+
+    '<h1>🚛 TRANSPORTE VICENTE — Resumen de viajes</h1>'+
+    '<h2>'+(cam?'Camión: '+cam.patente+' '+(cam.chofer||''):'Todos los camiones')+' · '+(desde?fmt(desde):'inicio')+' al '+(hasta?fmt(hasta):'hoy')+'</h2>'+
+    '<div class="res"><div class="ri"><div class="rv">'+vs.length+'</div><div class="rl">Viajes</div></div><div class="ri"><div class="rv">'+tKm.toLocaleString('es-AR')+'</div><div class="rl">Kilómetros</div></div><div class="ri"><div class="rv">$'+tG.toLocaleString('es-AR')+'</div><div class="rl">Total gastos</div></div></div>'+
+    '<table><thead><tr><th>Fecha</th><th>Camión</th><th>Origen</th><th>Destino</th><th>Km</th><th>Gasoil</th><th>Adelanto</th><th>Gastos</th><th>Total</th></tr></thead><tbody>'+
+    vs.map(function(v){var c=D.camiones.find(function(x){return x.id===v.cid;});var sg=(v.gs||[]).reduce(function(s,g){return s+g.monto;},0);return '<tr><td>'+fmt(v.f)+'</td><td>'+(c?c.patente:'?')+'</td><td>'+v.o+'</td><td>'+v.d+'</td><td>'+(v.km||'—')+'</td><td>'+(v.lt?v.lt+'L':'—')+'</td><td>'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—')+'</td><td>'+(sg>0?'$'+sg.toLocaleString('es-AR'):'—')+'</td><td class="tot">$'+tvTot(v).toLocaleString('es-AR')+'</td></tr>';}).join('')+
+    '</tbody></table><button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button></body></html>');
+  w.document.close();
+}
+
+function impResumen(){
+  var w=window.open('','_blank');
+  var filas=D.camiones.map(function(c){
+    var vs=D.viajes.filter(function(v){return v.cid===c.id;});
+    var km=vs.reduce(function(s,v){return s+(v.km||0);},0);
+    var lt=vs.reduce(function(s,v){return s+(v.lt||0);},0);
+    var tot=vs.reduce(function(s,v){return s+tvTot(v);},0);
+    var adv=vs.reduce(function(s,v){return s+(v.adv||0);},0);
+    var rr=lt>0?(km/lt).toFixed(1):'—';
+    return '<tr><td>'+c.patente+'</td><td>'+(c.chofer||'—')+'</td><td>'+vs.length+'</td><td>'+km.toLocaleString('es-AR')+'</td><td>'+lt.toLocaleString('es-AR')+'</td><td>'+rr+'</td><td>$'+adv.toLocaleString('es-AR')+'</td><td class="tot">$'+tot.toLocaleString('es-AR')+'</td></tr>';
+  }).join('');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen por Camión</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:20px;}table{width:100%;border-collapse:collapse;}th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid #ccc;}td{padding:7px 10px;border-bottom:1px solid #eee;}.tot{font-weight:700;color:#f97316;}@media print{button{display:none!important;}}</style></head><body>'+
+    '<h1>🚛 TRANSPORTE VICENTE — Resumen por camión</h1>'+
+    '<table><thead><tr><th>Patente</th><th>Chofer</th><th>Viajes</th><th>Km</th><th>Gasoil (L)</th><th>Rend.</th><th>Adelantos</th><th>Total gastos</th></tr></thead><tbody>'+filas+'</tbody></table><br>'+
+    '<button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button></body></html>');
+  w.document.close();
+}
+
+function impLiq(){
+  var lq=window._lq;if(!lq)return;
+  var w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liquidación</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:4px;}h2{font-size:1rem;color:#555;font-weight:normal;margin-bottom:20px;}.f{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;}.tot{font-weight:700;font-size:1.1rem;border-top:2px solid #f97316;margin-top:8px;padding-top:10px;}.pay{font-size:1.4rem;font-weight:700;color:#f97316;}@media print{button{display:none!important;}}</style></head><body>'+
+    '<h1>🚛 TRANSPORTE VICENTE — Liquidación de chofer</h1>'+
+    '<h2>'+lq.cam.patente+(lq.cam.chofer?' / '+lq.cam.chofer:'')+' · '+(lq.desde?fmt(lq.desde):'inicio')+' al '+(lq.hasta?fmt(lq.hasta):'hoy')+'</h2>'+
+    '<div class="f"><span>Viajes</span><strong>'+lq.vs.length+'</strong></div>'+
+    '<div class="f"><span>Km</span><strong>'+lq.tkm.toLocaleString('es-AR')+' km</strong></div>'+
+    '<div class="f"><span>Gasoil</span><strong>'+lq.tlt.toLocaleString('es-AR')+' L</strong></div>'+
+    (lq.cgasoil>0?'<div class="f"><span>Costo gasoil</span><strong>$'+lq.cgasoil.toLocaleString('es-AR')+'</strong></div>':'')+
+    (lq.fijo>0?'<div class="f"><span>Sueldo fijo</span><strong>$'+lq.fijo.toLocaleString('es-AR')+'</strong></div>':'')+
+    (lq.porPct>0?'<div class="f"><span>'+lq.pct+'% sobre tarifas</span><strong>$'+lq.porPct.toLocaleString('es-AR')+'</strong></div>':'')+
+    (lq.porViaje>0?'<div class="f"><span>Fijo x viaje</span><strong>$'+lq.porViaje.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="f"><span>Total bruto</span><strong>$'+lq.bruto.toLocaleString('es-AR')+'</strong></div>'+
+    (lq.tadv>0?'<div class="f"><span>Adelantos descontados</span><strong>-$'+lq.tadv.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="f tot"><span>A PAGAR</span><span class="pay">$'+lq.neto.toLocaleString('es-AR')+'</span></div><br>'+
+    '<button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button></body></html>');
+  w.document.close();
+}
+
+// ==================== EXPORT ====================
+function exportData(){
+  var blob=new Blob([JSON.stringify({camiones:D.camiones,viajes:D.viajes,tarifas:D.tarifas,clientes:D.clientes,proveedores:D.proveedores},null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='flotacontrol-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  toast('💾 Backup exportado');
+}
+
+// ==================== UTILS ====================
+function fmt(f){if(!f)return'';var p=f.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function abr(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(0)+'K';return Math.round(n).toLocaleString('es-AR');}
+
+// ==================== INIT ====================
+document.getElementById('vf').valueAsDate=new Date();
+document.getElementById('dfe').valueAsDate=new Date();
+document.getElementById('pdf2').valueAsDate=new Date();
+var hoy2=new Date().toISOString().slice(0,10);
+var p1m=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().slice(0,10);
+['lqd','id2'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=p1m;});
+['lqh','ih'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=hoy2;});
+</script>
+</body>
+</html>
