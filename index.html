@@ -750,7 +750,7 @@ async function sbFetch(path, method='GET', body=null){
 }
 
 // DATA en memoria
-let D = {camiones:[],viajes:[],tarifas:[],clientes:[],proveedores:[]};
+var D = {camiones:[],viajes:[],tarifas:[],clientes:[],proveedores:[]};
 
 // Cargar todos los datos desde Supabase
 async function loadAll(){
@@ -818,7 +818,7 @@ function doLogin(){
     const app=document.getElementById('app');
     app.style.display='flex';
     document.getElementById('tb-uname').textContent=u;
-    loadAll().then(()=>{renderDashboard();renderCamiones();syncSel();});
+    loadAll().then(function(){renderDashboard();renderCamiones();syncSel();});
   } else {
     const e=document.getElementById('l-err');
     e.style.display='block';
@@ -948,7 +948,7 @@ function calcL(){
   } else {if(hint)hint.style.display='none';}
 }
 let _editViajeId=null;
-function saveViaje(){
+async function saveViaje(){
   const cid=parseInt(document.getElementById('vc').value);
   const f=document.getElementById('vf').value;
   const o=document.getElementById('vo').value.trim();
@@ -1241,7 +1241,7 @@ function abr(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000)
 // ============================================================
 // TARIFAS
 // ============================================================
-function addTarifa(){
+async function addTarifa(){
   const o=document.getElementById('tf-o').value.trim();
   const d=document.getElementById('tf-d').value.trim();
   const p=parseFloat(document.getElementById('tf-p').value)||0;
@@ -1439,7 +1439,7 @@ function imprimirLiquidacion(){
 // CLIENTES
 // ============================================================
 function toggleFormCliente(){const f=document.getElementById('form-cliente');f.style.display=f.style.display==='none'?'block':'none';}
-function addCliente(){
+async function addCliente(){
   const nom=document.getElementById('cl-nom').value.trim();
   if(!nom){alert('Ingresá el nombre.');return;}
   if(!D.clientes)D.clientes=[];
@@ -1511,7 +1511,7 @@ function abrirCliente(id){
   document.getElementById('panel-cliente-det').classList.add('on');
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('on'));
 }
-function addDocCliente(){
+async function addDocCliente(){
   const c=D.clientes.find(x=>x.id===_clienteActivo);
   if(!c)return;
   const monto=parseFloat(document.getElementById('doc-monto').value)||0;
@@ -1531,7 +1531,7 @@ function addDocCliente(){
   ['doc-num','doc-monto','doc-desc'].forEach(id=>document.getElementById(id).value='');
   toast('✅ Documento agregado');
 }
-function delDocCliente(docId){
+async function delDocCliente(docId){
   const c=D.clientes.find(x=>x.id===_clienteActivo);
   if(!c)return;
   c.docs=c.docs.filter(d=>d.id!==docId);
@@ -1569,7 +1569,7 @@ function renderDocsCliente(){
 // PROVEEDORES
 // ============================================================
 function toggleFormProveedor(){const f=document.getElementById('form-proveedor');f.style.display=f.style.display==='none'?'block':'none';}
-function addProveedor(){
+async function addProveedor(){
   const nom=document.getElementById('pv-nom').value.trim();
   if(!nom){alert('Ingresá el nombre.');return;}
   if(!D.proveedores)D.proveedores=[];
@@ -1638,7 +1638,7 @@ function abrirProveedor(id){
   document.getElementById('panel-proveedor-det').classList.add('on');
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('on'));
 }
-function addDocProveedor(){
+async function addDocProveedor(){
   const p=D.proveedores.find(x=>x.id===_proveedorActivo);
   if(!p)return;
   const monto=parseFloat(document.getElementById('pdoc-monto').value)||0;
@@ -1658,7 +1658,7 @@ function addDocProveedor(){
   ['pdoc-num','pdoc-monto','pdoc-desc'].forEach(id=>document.getElementById(id).value='');
   toast('✅ Documento agregado');
 }
-function delDocProveedor(docId){
+async function delDocProveedor(docId){
   const p=D.proveedores.find(x=>x.id===_proveedorActivo);
   if(!p)return;
   p.docs=p.docs.filter(d=>d.id!==docId);
@@ -1693,7 +1693,7 @@ function renderDocsProveedor(){
 }
 
 
-function cambiarEstadoDocCliente(docId, nuevoEstado){
+async function cambiarEstadoDocCliente(docId, nuevoEstado){
   const c=D.clientes.find(x=>x.id===_clienteActivo);
   if(!c)return;
   const doc=c.docs.find(d=>d.id===docId);
@@ -1703,7 +1703,7 @@ function cambiarEstadoDocCliente(docId, nuevoEstado){
   renderDocsCliente();
   toast(nuevoEstado==='Cobrado'?'✅ Marcado como cobrado':nuevoEstado==='Anulado'?'❌ Documento anulado':'🟡 Vuelto a pendiente');
 }
-function cambiarEstadoDocProveedor(docId, nuevoEstado){
+async function cambiarEstadoDocProveedor(docId, nuevoEstado){
   const p=D.proveedores.find(x=>x.id===_proveedorActivo);
   if(!p)return;
   const doc=p.docs.find(d=>d.id===docId);
