@@ -621,7 +621,7 @@ function goP(p,el){
   document.getElementById('p-'+p).classList.add('on');
   if(el)el.classList.add('on');
   if(p==='dashboard')renderDash();
-  if(p==='viajes'){syncSels();renderViajes();}
+  if(p==='viajes'){syncSels();syncClientes();renderViajes();}
   if(p==='camiones')renderCamiones();
   if(p==='tarifas')renderTarifas();
   if(p==='liquidacion')syncLq();
@@ -639,6 +639,15 @@ function toast(msg,col){
 }
 
 // ==================== SYNC SELECTS ====================
+function syncClientes(){
+  var ocli=D.clientes.map(function(c){return '<option value="'+c.id+'">'+c.nom+'</option>';}).join('');
+  ['vcli','fvcli'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var pre=id==='fvcli'?'<option value="">Todos</option>':'<option value="">— Sin cliente —</option>';
+    el.innerHTML=pre+ocli;
+  });
+}
 function syncSels(){
   var o=D.camiones.map(function(c){return '<option value="'+c.id+'">'+c.patente+(c.chofer?' – '+c.chofer:'')+'</option>';}).join('');
   ['vc','fvc','lqc','ic'].forEach(function(id){
@@ -647,14 +656,8 @@ function syncSels(){
     var pre=id==='fvc'||id==='ic'?'<option value="">Todos</option>':'<option value="">— Seleccionar —</option>';
     el.innerHTML=pre+o;
   });
-  // sync cliente filters
-  var ocli=D.clientes.map(function(c){return '<option value="'+c.id+'">'+c.nom+'</option>';}).join('');
-  ['vcli','fvcli'].forEach(function(id){
-    var el=document.getElementById(id);
-    if(!el)return;
-    var pre=id==='fvcli'?'<option value="">Todos</option>':'<option value="">— Sin cliente —</option>';
-    el.innerHTML=pre+ocli;
-  });
+  // clientes sync handled by syncClientes()
+
 }
 
 // ==================== CAMIONES ====================
@@ -734,7 +737,7 @@ function renderCamiones(){
 var gfR=[];
 var editVId=null;
 
-function showFV(){document.getElementById('fv').style.display='block';syncSels();}
+function showFV(){document.getElementById('fv').style.display='block';syncSels();syncClientes();}
 function hideFV(){document.getElementById('fv').style.display='none';gfR=[];renderGF();editVId=null;document.getElementById('fv-title').textContent='Registrar nuevo viaje';document.getElementById('fv-btn').textContent='✓ Guardar Viaje';}
 
 function addGF(){gfR.push({id:Date.now()});renderGF();}
