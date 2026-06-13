@@ -351,7 +351,7 @@ tbody td{padding:10px 14px;vertical-align:middle;}
           <div class="ct">Calcular liquidación</div>
           <!-- FILA 1: Camión + Fechas -->
           <div class="fr3">
-            <div class="fg"><label>Camión / Chofer</label><select id="lqc"><option value="">— Seleccionar —</option></select></div>
+            <div class="fg"><label>Camión / Chofer</label><select id="lqc" onchange="document.getElementById('rlq').innerHTML='';document.getElementById('lqkm').value='';document.getElementById('lqadv').value='';document.getElementById('lqgas').value='';"><option value="">— Seleccionar —</option></select></div>
             <div class="fg"><label>Desde</label><input id="lqd" type="date"/></div>
             <div class="fg"><label>Hasta</label><input id="lqh" type="date"/></div>
           </div>
@@ -1019,8 +1019,10 @@ function renderLiq(cam,vs,desde,hasta,tkm,tlt,tadv,tgas){
   var porKm=pkm>0?kmFinal*pkm:0;
   var bruto=fijo+porKm;
   var neto=bruto-advFinal;
+  var netoFinal=Math.max(0,neto);
+  var saldoFavor=neto<0?Math.abs(neto):0;
   var rr=tlt>0?(tkm/tlt).toFixed(1)+' km/L':'—';
-  window._lq={cam:cam,vs:vs,desde:desde,hasta:hasta,kmFinal:kmFinal,pkm:pkm,fijo:fijo,porKm:porKm,bruto:bruto,advFinal:advFinal,gasFinal:gasFinal,neto:neto,tlt:tlt,rr:rr};
+  window._lq={cam:cam,vs:vs,desde:desde,hasta:hasta,kmFinal:kmFinal,pkm:pkm,fijo:fijo,porKm:porKm,bruto:bruto,advFinal:advFinal,gasFinal:gasFinal,neto:netoFinal,saldoFavor:saldoFavor,tlt:tlt,rr:rr};
   document.getElementById('rlq').innerHTML=
     '<div class="card" style="max-width:700px">'+
     '<div class="ct">📋 Liquidación — '+cam.patente+(cam.chofer?' / 👤 '+cam.chofer:'')+'</div>'+
@@ -1041,7 +1043,8 @@ function renderLiq(cam,vs,desde,hasta,tkm,tlt,tadv,tgas){
     (gasFinal>0?'<div class="rf"><span>🧾 Total gastos del período</span><strong style="color:var(--dim)">$'+gasFinal.toLocaleString('es-AR')+'</strong></div>':'')+
     '<div class="rf" style="border-top:2px solid var(--acc);margin-top:8px;padding-top:10px">'+
     '<span style="font-family:Oswald,sans-serif;font-size:1.1rem;font-weight:700">💰 A PAGAR</span>'+
-    '<strong style="color:var(--green);font-size:1.4rem;font-family:Oswald,sans-serif">$'+neto.toLocaleString('es-AR')+'</strong></div>'+
+    '<strong style="color:var(--green);font-size:1.4rem;font-family:Oswald,sans-serif">$'+netoFinal.toLocaleString('es-AR')+'</strong></div>'+
+    (saldoFavor>0?'<div style="background:rgba(251,191,36,.1);border:1px solid var(--yellow);border-radius:8px;padding:10px;margin-top:10px;font-size:.82rem;color:var(--yellow)">⚠️ Los adelantos superan el total bruto. Saldo a favor del empleador: <strong>$'+saldoFavor.toLocaleString('es-AR')+'</strong></div>':'')+
     '</div>'+
     '<div style="display:flex;gap:10px;margin-top:14px">'+
     '<button class="btn btn-p" onclick="recalcLiq()">🔄 Recalcular</button>'+
@@ -1450,7 +1453,7 @@ function impLiq(){
     '.pay{font-size:1.5rem;font-weight:700;color:#f97316;}'+
     '.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;background:#f9f9f9;padding:14px;border-radius:8px;}'+
     '.gi{text-align:center;}.gv{font-size:1.4rem;font-weight:700;color:#f97316;}.gl{font-size:.7rem;text-transform:uppercase;color:#888;}'+
-    '@media print{button{display:none!important;}}</style></head><body>'+
+    '@media print{button{display:none!important;}}@page{size:A4 portrait;margin:20mm;}@media print{body{font-size:12px;}}</style></head><body>'+
     '<h1>🚛 TRANSPORTE VICENTE — Liquidación de chofer</h1>'+
     '<h2>'+lq.cam.patente+(lq.cam.chofer?' / '+lq.cam.chofer:'')+' · '+(lq.desde?fmt(lq.desde):'inicio')+' al '+(lq.hasta?fmt(lq.hasta):'hoy')+'</h2>'+
     '<div class="grid">'+
