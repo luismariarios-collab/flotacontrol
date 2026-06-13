@@ -347,22 +347,41 @@ tbody td{padding:10px 14px;vertical-align:middle;}
       <!-- LIQUIDACION -->
       <div id="p-liquidacion" class="panel">
         <div class="pgh"><div class="pgt"><em>👷</em>Liquidación de chofer</div></div>
-        <div class="card" style="max-width:600px;margin-bottom:20px;">
+        <div class="card" style="max-width:700px;margin-bottom:20px;">
           <div class="ct">Calcular liquidación</div>
+          <!-- FILA 1: Camión + Fechas -->
           <div class="fr3">
             <div class="fg"><label>Camión / Chofer</label><select id="lqc"><option value="">— Seleccionar —</option></select></div>
             <div class="fg"><label>Desde</label><input id="lqd" type="date"/></div>
             <div class="fg"><label>Hasta</label><input id="lqh" type="date"/></div>
           </div>
+          <!-- FILA 2: Km + Precio por km -->
           <div class="fr2">
+            <div class="fg">
+              <label>Km del período (calculado automático)</label>
+              <input id="lqkm" type="number" placeholder="Se calcula solo" min="0" style="background:var(--s3);"/>
+              <div style="font-size:.68rem;color:var(--dim);margin-top:4px">💡 Se completa al calcular. Podés editarlo.</div>
+            </div>
+            <div class="fg"><label>Precio por km ($)</label><input id="lqpkm" type="number" placeholder="Ej: 850" min="0"/></div>
+          </div>
+          <!-- FILA 3: Sueldo fijo + Adelantos + Gastos -->
+          <div class="fr3">
             <div class="fg"><label>Sueldo fijo ($)</label><input id="lqf" type="number" placeholder="0.00" min="0"/></div>
-            <div class="fg"><label>% por viaje sobre tarifa</label><input id="lqpct" type="number" placeholder="0" min="0" max="100" step="0.5"/></div>
+            <div class="fg">
+              <label>Total adelantos (automático)</label>
+              <input id="lqadv" type="number" placeholder="Se calcula solo" min="0" style="background:var(--s3);"/>
+              <div style="font-size:.68rem;color:var(--dim);margin-top:4px">💡 Podés editarlo.</div>
+            </div>
+            <div class="fg">
+              <label>Total gastos (automático)</label>
+              <input id="lqgas" type="number" placeholder="Se calcula solo" min="0" style="background:var(--s3);"/>
+              <div style="font-size:.68rem;color:var(--dim);margin-top:4px">💡 Podés editarlo.</div>
+            </div>
           </div>
-          <div class="fr2">
-            <div class="fg"><label>Monto fijo por viaje ($)</label><input id="lqxv" type="number" placeholder="0.00" min="0"/></div>
-            <div class="fg"><label>Precio gasoil ($/L)</label><input id="lqgl" type="number" placeholder="Ej: 1200" min="0"/></div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn btn-p" onclick="calcLiq()">Calcular liquidación</button>
+            <span style="font-size:.78rem;color:var(--dim)">Los campos en gris se calculan solos — podés editarlos antes de imprimir</span>
           </div>
-          <button class="btn btn-p" onclick="calcLiq()">Calcular liquidación</button>
         </div>
         <div id="rlq"></div>
       </div>
@@ -971,44 +990,69 @@ function calcLiq(){
   var cid=parseInt(document.getElementById('lqc').value);
   var desde=document.getElementById('lqd').value;
   var hasta=document.getElementById('lqh').value;
-  var fijo=parseFloat(document.getElementById('lqf').value)||0;
-  var pct=parseFloat(document.getElementById('lqpct').value)||0;
-  var xv=parseFloat(document.getElementById('lqxv').value)||0;
-  var pgl=parseFloat(document.getElementById('lqgl').value)||0;
-  if(!cid){alert('Seleccioná un camión.');return;}
+  if(!cid){alert('Seleccioná un camión/chofer.');return;}
   var cam=D.camiones.find(function(c){return c.id===cid;});
   var vs=D.viajes.filter(function(v){return v.cid===cid;});
   if(desde)vs=vs.filter(function(v){return v.f>=desde;});
   if(hasta)vs=vs.filter(function(v){return v.f<=hasta;});
   if(!vs.length){document.getElementById('rlq').innerHTML='<div class="empty"><div class="ei">📋</div>Sin viajes en ese período.</div>';return;}
+  // Calcular automáticos
   var tkm=vs.reduce(function(s,v){return s+(v.km||0);},0);
   var tlt=vs.reduce(function(s,v){return s+(v.lt||0);},0);
   var tadv=vs.reduce(function(s,v){return s+(v.adv||0);},0);
-  var cgasoil=pgl>0?tlt*pgl:0;
-  var ttar=vs.reduce(function(s,v){
-    var tf=D.tarifas.find(function(t){return t.o.toLowerCase()===v.o.toLowerCase()&&t.d.toLowerCase()===v.d.toLowerCase();});
-    return s+(tf?tf.p:0);
-  },0);
-  var porPct=pct>0?(ttar*pct/100):0;
-  var porViaje=xv>0?xv*vs.length:0;
-  var bruto=fijo+porPct+porViaje;
-  var neto=bruto-tadv;
-  window._lq={cam:cam,vs:vs,tkm:tkm,tlt:tlt,cgasoil:cgasoil,fijo:fijo,porPct:porPct,pct:pct,ttar:ttar,porViaje:porViaje,xv:xv,bruto:bruto,tadv:tadv,neto:neto,desde:desde,hasta:hasta};
+  var tgas=vs.reduce(function(s,v){return s+((v.gs||[]).reduce(function(x,g){return x+g.monto;},0));},0);
+  // Cargar en campos editables
+  document.getElementById('lqkm').value=tkm;
+  document.getElementById('lqadv').value=tadv;
+  document.getElementById('lqgas').value=tgas;
+  // Renderizar resultado con campos editables
+  renderLiq(cam,vs,desde,hasta,tkm,tlt,tadv,tgas);
+}
+
+function renderLiq(cam,vs,desde,hasta,tkm,tlt,tadv,tgas){
+  // Leer valores editables
+  var kmFinal=parseFloat(document.getElementById('lqkm').value)||tkm;
+  var pkm=parseFloat(document.getElementById('lqpkm').value)||0;
+  var fijo=parseFloat(document.getElementById('lqf').value)||0;
+  var advFinal=parseFloat(document.getElementById('lqadv').value)||tadv;
+  var gasFinal=parseFloat(document.getElementById('lqgas').value)||tgas;
+  var porKm=pkm>0?kmFinal*pkm:0;
+  var bruto=fijo+porKm;
+  var neto=bruto-advFinal;
+  var rr=tlt>0?(tkm/tlt).toFixed(1)+' km/L':'—';
+  window._lq={cam:cam,vs:vs,desde:desde,hasta:hasta,kmFinal:kmFinal,pkm:pkm,fijo:fijo,porKm:porKm,bruto:bruto,advFinal:advFinal,gasFinal:gasFinal,neto:neto,tlt:tlt,rr:rr};
   document.getElementById('rlq').innerHTML=
-    '<div class="card" style="max-width:600px">'+
-    '<div class="ct">📋 '+cam.patente+(cam.chofer?' / '+cam.chofer:'')+'</div>'+
-    '<div style="font-size:.78rem;color:var(--dim);margin-bottom:12px">'+(desde?fmt(desde):'inicio')+' al '+(hasta?fmt(hasta):'hoy')+'</div>'+
-    '<div class="rf"><span>🗺️ Viajes</span><strong>'+vs.length+'</strong></div>'+
-    '<div class="rf"><span>📍 Km</span><strong>'+tkm.toLocaleString('es-AR')+' km</strong></div>'+
-    '<div class="rf"><span>⛽ Gasoil</span><strong>'+tlt.toLocaleString('es-AR')+' L</strong></div>'+
-    (cgasoil>0?'<div class="rf"><span>💧 Costo gasoil</span><strong>$'+cgasoil.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="card" style="max-width:700px">'+
+    '<div class="ct">📋 Liquidación — '+cam.patente+(cam.chofer?' / 👤 '+cam.chofer:'')+'</div>'+
+    '<div style="font-size:.78rem;color:var(--dim);margin-bottom:16px">Período: '+(desde?fmt(desde):'inicio')+' al '+(hasta?fmt(hasta):'hoy')+'</div>'+
+    // Stats grid
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'+
+    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--blue)">'+vs.length+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Viajes</div></div>'+
+    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--green)">'+kmFinal.toLocaleString('es-AR')+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Km recorridos</div></div>'+
+    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--yellow)">'+tlt.toLocaleString('es-AR')+'L</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Gasoil</div></div>'+
+    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--yellow)">'+rr+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Rendimiento</div></div>'+
+    '</div>'+
+    // Calculo
+    '<div style="border-top:1px solid var(--brd);padding-top:12px">'+
+    (pkm>0?'<div class="rf"><span>📍 Pago por km ('+kmFinal.toLocaleString('es-AR')+' km × $'+pkm.toLocaleString('es-AR')+')</span><strong style="color:var(--green)">$'+porKm.toLocaleString('es-AR')+'</strong></div>':'')+
     (fijo>0?'<div class="rf"><span>💵 Sueldo fijo</span><strong style="color:var(--green)">$'+fijo.toLocaleString('es-AR')+'</strong></div>':'')+
-    (porPct>0?'<div class="rf"><span>📊 '+pct+'% sobre tarifas</span><strong style="color:var(--green)">$'+porPct.toLocaleString('es-AR')+'</strong></div>':'')+
-    (porViaje>0?'<div class="rf"><span>🚛 Fijo x viaje ('+vs.length+'×$'+xv.toLocaleString('es-AR')+')</span><strong style="color:var(--green)">$'+porViaje.toLocaleString('es-AR')+'</strong></div>':'')+
-    '<div class="rf"><span>TOTAL BRUTO</span><strong style="color:var(--acc)">$'+bruto.toLocaleString('es-AR')+'</strong></div>'+
-    (tadv>0?'<div class="rf"><span>➖ Adelantos</span><strong style="color:var(--red)">-$'+tadv.toLocaleString('es-AR')+'</strong></div>':'')+
-    '<div class="rf" style="border-top:2px solid var(--acc);margin-top:6px;padding-top:8px"><span style="font-family:Oswald,sans-serif;font-size:1rem;font-weight:700">A PAGAR</span><strong style="color:var(--green);font-size:1.2rem;font-family:Oswald,sans-serif">$'+neto.toLocaleString('es-AR')+'</strong></div>'+
-    '<button class="btn btn-p" style="margin-top:12px" onclick="impLiq()">🖨️ Imprimir liquidación</button></div>';
+    '<div class="rf"><span style="font-weight:700">TOTAL BRUTO</span><strong style="color:var(--acc);font-size:1rem">$'+bruto.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>💵 Adelantos descontados</span><strong style="color:var(--red)">-$'+advFinal.toLocaleString('es-AR')+'</strong></div>'+
+    (gasFinal>0?'<div class="rf"><span>🧾 Total gastos del período</span><strong style="color:var(--dim)">$'+gasFinal.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="rf" style="border-top:2px solid var(--acc);margin-top:8px;padding-top:10px">'+
+    '<span style="font-family:Oswald,sans-serif;font-size:1.1rem;font-weight:700">💰 A PAGAR</span>'+
+    '<strong style="color:var(--green);font-size:1.4rem;font-family:Oswald,sans-serif">$'+neto.toLocaleString('es-AR')+'</strong></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px;margin-top:14px">'+
+    '<button class="btn btn-p" onclick="recalcLiq()">🔄 Recalcular</button>'+
+    '<button class="btn btn-o" onclick="impLiq()">🖨️ Imprimir liquidación</button>'+
+    '</div></div>';
+}
+
+function recalcLiq(){
+  var lq=window._lq;
+  if(!lq)return;
+  renderLiq(lq.cam,lq.vs,lq.desde,lq.hasta,lq.kmFinal,lq.tlt,lq.advFinal,lq.gasFinal);
 }
 
 // ==================== CLIENTES ====================
@@ -1398,20 +1442,31 @@ function impResumen(){
 function impLiq(){
   var lq=window._lq;if(!lq)return;
   var w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liquidación</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:4px;}h2{font-size:1rem;color:#555;font-weight:normal;margin-bottom:20px;}.f{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;}.tot{font-weight:700;font-size:1.1rem;border-top:2px solid #f97316;margin-top:8px;padding-top:10px;}.pay{font-size:1.4rem;font-weight:700;color:#f97316;}@media print{button{display:none!important;}}</style></head><body>'+
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liquidación — '+lq.cam.patente+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}'+
+    'h1{font-size:1.4rem;margin-bottom:4px;}h2{font-size:1rem;color:#555;font-weight:normal;margin-bottom:20px;}'+
+    '.f{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;}'+
+    '.tot{font-weight:700;font-size:1.1rem;border-top:2px solid #f97316;margin-top:8px;padding-top:10px;}'+
+    '.pay{font-size:1.5rem;font-weight:700;color:#f97316;}'+
+    '.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;background:#f9f9f9;padding:14px;border-radius:8px;}'+
+    '.gi{text-align:center;}.gv{font-size:1.4rem;font-weight:700;color:#f97316;}.gl{font-size:.7rem;text-transform:uppercase;color:#888;}'+
+    '@media print{button{display:none!important;}}</style></head><body>'+
     '<h1>🚛 TRANSPORTE VICENTE — Liquidación de chofer</h1>'+
     '<h2>'+lq.cam.patente+(lq.cam.chofer?' / '+lq.cam.chofer:'')+' · '+(lq.desde?fmt(lq.desde):'inicio')+' al '+(lq.hasta?fmt(lq.hasta):'hoy')+'</h2>'+
-    '<div class="f"><span>Viajes</span><strong>'+lq.vs.length+'</strong></div>'+
-    '<div class="f"><span>Km</span><strong>'+lq.tkm.toLocaleString('es-AR')+' km</strong></div>'+
-    '<div class="f"><span>Gasoil</span><strong>'+lq.tlt.toLocaleString('es-AR')+' L</strong></div>'+
-    (lq.cgasoil>0?'<div class="f"><span>Costo gasoil</span><strong>$'+lq.cgasoil.toLocaleString('es-AR')+'</strong></div>':'')+
-    (lq.fijo>0?'<div class="f"><span>Sueldo fijo</span><strong>$'+lq.fijo.toLocaleString('es-AR')+'</strong></div>':'')+
-    (lq.porPct>0?'<div class="f"><span>'+lq.pct+'% sobre tarifas</span><strong>$'+lq.porPct.toLocaleString('es-AR')+'</strong></div>':'')+
-    (lq.porViaje>0?'<div class="f"><span>Fijo x viaje</span><strong>$'+lq.porViaje.toLocaleString('es-AR')+'</strong></div>':'')+
-    '<div class="f"><span>Total bruto</span><strong>$'+lq.bruto.toLocaleString('es-AR')+'</strong></div>'+
-    (lq.tadv>0?'<div class="f"><span>Adelantos descontados</span><strong>-$'+lq.tadv.toLocaleString('es-AR')+'</strong></div>':'')+
-    '<div class="f tot"><span>A PAGAR</span><span class="pay">$'+lq.neto.toLocaleString('es-AR')+'</span></div><br>'+
-    '<button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button></body></html>');
+    '<div class="grid">'+
+    '<div class="gi"><div class="gv">'+lq.vs.length+'</div><div class="gl">Viajes</div></div>'+
+    '<div class="gi"><div class="gv">'+lq.kmFinal.toLocaleString('es-AR')+'</div><div class="gl">Km recorridos</div></div>'+
+    '<div class="gi"><div class="gv">'+lq.tlt.toLocaleString('es-AR')+'L</div><div class="gl">Gasoil</div></div>'+
+    '<div class="gi"><div class="gv">'+lq.rr+'</div><div class="gl">Rendimiento</div></div>'+
+    '</div>'+
+    (lq.pkm>0?'<div class="f"><span>📍 Pago por km ('+lq.kmFinal.toLocaleString('es-AR')+' km × $'+lq.pkm.toLocaleString('es-AR')+')</span><strong>$'+lq.porKm.toLocaleString('es-AR')+'</strong></div>':'')+
+    (lq.fijo>0?'<div class="f"><span>💵 Sueldo fijo</span><strong>$'+lq.fijo.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="f"><span>TOTAL BRUTO</span><strong>$'+lq.bruto.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="f"><span>➖ Adelantos descontados</span><strong>-$'+lq.advFinal.toLocaleString('es-AR')+'</strong></div>'+
+    (lq.gasFinal>0?'<div class="f"><span>🧾 Total gastos del período</span><strong>$'+lq.gasFinal.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<div class="f tot"><span>💰 A PAGAR</span><span class="pay">$'+lq.neto.toLocaleString('es-AR')+'</span></div><br>'+
+    '<button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button>'+
+    '</body></html>');
   w.document.close();
 }
 
