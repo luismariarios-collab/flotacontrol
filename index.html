@@ -209,6 +209,8 @@ tbody td{padding:10px 14px;vertical-align:middle;}
       <div class="ns">Gestión comercial</div>
       <div class="ni" onclick="goP('clientes',this)"><span class="ic">🤝</span>Clientes</div>
       <div class="ni" onclick="goP('proveedores',this)"><span class="ic">🏭</span>Proveedores</div>
+      <div class="ns">Impuestos</div>
+      <div class="ni" onclick="goP('iva',this)"><span class="ic">🧾</span>IVA / Impuestos</div>
       <div class="ns">Informes</div>
       <div class="ni" onclick="goP('resumen',this)"><span class="ic">📈</span>Resumen por camión</div>
       <div class="ni" onclick="goP('impresion',this)"><span class="ic">🖨️</span>Imprimir informes</div>
@@ -431,11 +433,21 @@ tbody td{padding:10px 14px;vertical-align:middle;}
                 <div class="fg"><label>Número</label><input id="dn" type="text" placeholder="0001-00012345"/></div>
                 <div class="fg"><label>Fecha</label><input id="dfe" type="date"/></div>
               </div>
-              <div class="fr2">
-                <div class="fg"><label>Monto ($)</label><input id="dm" type="number" placeholder="0.00" min="0"/></div>
-                <div class="fg"><label>Estado</label><select id="de"><option>Pendiente</option><option>Cobrado</option><option>Anulado</option></select></div>
+              <div class="fr3">
+                <div class="fg"><label>Monto neto ($)</label><input id="dm" type="number" placeholder="0.00" min="0" oninput="calcIvaCli()"/></div>
+                <div class="fg"><label>Alícuota IVA</label>
+                  <select id="dali" onchange="calcIvaCli()">
+                    <option value="21">21%</option>
+                    <option value="10.5">10.5%</option>
+                    <option value="0">0% / Exento</option>
+                  </select>
+                </div>
+                <div class="fg"><label>Total con IVA ($)</label><input id="dtotal" type="number" placeholder="0.00" min="0" style="background:var(--s3);" readonly/></div>
               </div>
-              <div class="fg"><label>Descripción</label><input id="dd2" type="text" placeholder="Detalle"/></div>
+              <div class="fr2">
+                <div class="fg"><label>Estado</label><select id="de"><option>Pendiente</option><option>Cobrado</option><option>Anulado</option></select></div>
+                <div class="fg"><label>Descripción</label><input id="dd2" type="text" placeholder="Detalle"/></div>
+              </div>
               <button class="btn btn-p" onclick="addDocC()">+ Agregar documento</button>
             </div>
           </div>
@@ -490,11 +502,21 @@ tbody td{padding:10px 14px;vertical-align:middle;}
                 <div class="fg"><label>Número</label><input id="pdn" type="text" placeholder="0001-00012345"/></div>
                 <div class="fg"><label>Fecha</label><input id="pdf2" type="date"/></div>
               </div>
-              <div class="fr2">
-                <div class="fg"><label>Monto ($)</label><input id="pdm" type="number" placeholder="0.00" min="0"/></div>
-                <div class="fg"><label>Estado</label><select id="pde"><option>Pendiente</option><option>Pagado</option><option>Anulado</option></select></div>
+              <div class="fr3">
+                <div class="fg"><label>Monto neto ($)</label><input id="pdm" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+                <div class="fg"><label>Alícuota IVA</label>
+                  <select id="pdali" onchange="calcIvaPv()">
+                    <option value="21">21%</option>
+                    <option value="10.5">10.5%</option>
+                    <option value="0">0% / Exento</option>
+                  </select>
+                </div>
+                <div class="fg"><label>Total con IVA ($)</label><input id="pdtotal" type="number" placeholder="0.00" min="0" style="background:var(--s3);" readonly/></div>
               </div>
-              <div class="fg"><label>Descripción</label><input id="pdd" type="text" placeholder="Qué se compró"/></div>
+              <div class="fr2">
+                <div class="fg"><label>Estado</label><select id="pde"><option>Pendiente</option><option>Pagado</option><option>Anulado</option></select></div>
+                <div class="fg"><label>Descripción</label><input id="pdd" type="text" placeholder="Qué se compró"/></div>
+              </div>
               <button class="btn btn-p" onclick="addDocP()">+ Agregar documento</button>
             </div>
           </div>
@@ -503,6 +525,29 @@ tbody td{padding:10px 14px;vertical-align:middle;}
             <div id="ldpv"></div>
           </div>
         </div>
+      </div>
+
+      <!-- IVA -->
+      <div id="p-iva" class="panel">
+        <div class="pgh">
+          <div class="pgt"><em>🧾</em>IVA / Impuestos</div>
+        </div>
+        <div class="card" style="max-width:400px;margin-bottom:20px;">
+          <div class="ct">Seleccionar período</div>
+          <div class="fr2">
+            <div class="fg"><label>Mes</label>
+              <select id="ivames" style="width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:8px 11px;color:var(--txt);font-family:'Source Sans 3',sans-serif;font-size:.9rem;outline:none;">
+                <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+                <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+                <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+            </div>
+            <div class="fg"><label>Año</label><input id="ivaanio" type="number" placeholder="2026" value="2026" min="2020" max="2030"/></div>
+          </div>
+          <button class="btn btn-p" onclick="calcIva()">Calcular IVA del período</button>
+        </div>
+        <div id="riva"></div>
       </div>
 
       <!-- RESUMEN -->
@@ -1127,7 +1172,9 @@ async function addDocC(){
   var fecha=document.getElementById('dfe').value;
   if(!fecha){alert('Ingresá la fecha.');return;}
   if(!c.docs)c.docs=[];
-  c.docs.push({id:Date.now(),tipo:document.getElementById('dt').value,num:document.getElementById('dn').value.trim(),fecha:fecha,monto:monto,estado:document.getElementById('de').value,desc:document.getElementById('dd2').value.trim()});
+  var ali=parseFloat(document.getElementById('dali').value)||0;
+  var totalIva=monto*(1+ali/100);
+  c.docs.push({id:Date.now(),tipo:document.getElementById('dt').value,num:document.getElementById('dn').value.trim(),fecha:fecha,monto:monto,ali:ali,totalIva:totalIva,estado:document.getElementById('de').value,desc:document.getElementById('dd2').value.trim()});
   loading(true);
   await sb('clientes?id=eq.'+c.id,'PATCH',{docs:c.docs});
   loading(false);
@@ -1170,7 +1217,7 @@ function renderDocsCl(){
     '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total facturado</div></div>'+
     '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente cobro</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Total c/IVA</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Cobrado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
@@ -1251,7 +1298,9 @@ async function addDocP(){
   var fecha=document.getElementById('pdf2').value;
   if(!fecha){alert('Ingresá la fecha.');return;}
   if(!p.docs)p.docs=[];
-  p.docs.push({id:Date.now(),tipo:document.getElementById('pdt').value,num:document.getElementById('pdn').value.trim(),fecha:fecha,monto:monto,estado:document.getElementById('pde').value,desc:document.getElementById('pdd').value.trim()});
+  var pali=parseFloat(document.getElementById('pdali').value)||0;
+  var ptotalIva=monto*(1+pali/100);
+  p.docs.push({id:Date.now(),tipo:document.getElementById('pdt').value,num:document.getElementById('pdn').value.trim(),fecha:fecha,monto:monto,ali:pali,totalIva:ptotalIva,estado:document.getElementById('pde').value,desc:document.getElementById('pdd').value.trim()});
   loading(true);
   await sb('proveedores?id=eq.'+p.id,'PATCH',{docs:p.docs});
   loading(false);
@@ -1294,7 +1343,7 @@ function renderDocsPv(){
     '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total comprado</div></div>'+
     '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente pago</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Total c/IVA</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Pagado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
@@ -1478,6 +1527,139 @@ function exportData(){
   var blob=new Blob([JSON.stringify({camiones:D.camiones,viajes:D.viajes,tarifas:D.tarifas,clientes:D.clientes,proveedores:D.proveedores},null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='flotacontrol-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();
   toast('💾 Backup exportado');
+}
+
+// ==================== IVA ====================
+function calcIvaCli(){
+  var neto=parseFloat(document.getElementById('dm').value)||0;
+  var ali=parseFloat(document.getElementById('dali').value)||0;
+  var total=neto*(1+ali/100);
+  document.getElementById('dtotal').value=Math.round(total);
+}
+
+function calcIvaPv(){
+  var neto=parseFloat(document.getElementById('pdm').value)||0;
+  var ali=parseFloat(document.getElementById('pdali').value)||0;
+  var total=neto*(1+ali/100);
+  document.getElementById('pdtotal').value=Math.round(total);
+}
+
+function calcIvaInit(){
+  // Set current month
+  var now=new Date();
+  var sel=document.getElementById('ivames');
+  if(sel)sel.value=now.getMonth()+1;
+}
+
+function calcIva(){
+  var mes=parseInt(document.getElementById('ivames').value);
+  var anio=parseInt(document.getElementById('ivaanio').value)||new Date().getFullYear();
+  var mesNom=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][mes-1];
+
+  // IVA VENTAS (clientes)
+  var ivaVentas21=0, ivaVentas105=0, netoVentas=0;
+  D.clientes.forEach(function(c){
+    (c.docs||[]).forEach(function(d){
+      if(!d.fecha)return;
+      var dm=parseInt(d.fecha.split('-')[1]);
+      var dy=parseInt(d.fecha.split('-')[0]);
+      if(dm===mes&&dy===anio&&d.estado!=='Anulado'){
+        var neto=d.monto||0;
+        var ali=d.ali||0;
+        var iva=neto*ali/100;
+        netoVentas+=neto;
+        if(ali===21)ivaVentas21+=iva;
+        else if(ali===10.5)ivaVentas105+=iva;
+      }
+    });
+  });
+
+  // IVA COMPRAS (proveedores)
+  var ivaCompras21=0, ivaCompras105=0, netoCompras=0;
+  D.proveedores.forEach(function(p){
+    (p.docs||[]).forEach(function(d){
+      if(!d.fecha)return;
+      var dm=parseInt(d.fecha.split('-')[1]);
+      var dy=parseInt(d.fecha.split('-')[0]);
+      if(dm===mes&&dy===anio&&d.estado!=='Anulado'){
+        var neto=d.monto||0;
+        var ali=d.ali||0;
+        var iva=neto*ali/100;
+        netoCompras+=neto;
+        if(ali===21)ivaCompras21+=iva;
+        else if(ali===10.5)ivaCompras105+=iva;
+      }
+    });
+  });
+
+  var totalIvaVentas=ivaVentas21+ivaVentas105;
+  var totalIvaCompras=ivaCompras21+ivaCompras105;
+  var saldo=totalIvaVentas-totalIvaCompras;
+
+  var saldoColor=saldo>0?'var(--red)':'var(--green)';
+  var saldoTxt=saldo>0?'A PAGAR a AFIP':'SALDO A FAVOR';
+
+  document.getElementById('riva').innerHTML=
+    '<div class="card" style="max-width:700px">'+
+    '<div class="ct">🧾 Resumen IVA — '+mesNom+' '+anio+'</div>'+
+    // IVA VENTAS
+    '<div style="margin-bottom:16px">'+
+    '<div style="font-family:Oswald,sans-serif;font-weight:600;font-size:.9rem;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">💰 IVA en Ventas (Clientes)</div>'+
+    '<div class="rf"><span>Base imponible (neto ventas)</span><strong>$'+netoVentas.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>IVA 21% ventas</span><strong style="color:var(--blue)">$'+ivaVentas21.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>IVA 10.5% ventas</span><strong style="color:var(--blue)">$'+ivaVentas105.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span style="font-weight:700">Total IVA ventas</span><strong style="color:var(--blue);font-size:1rem">$'+totalIvaVentas.toLocaleString('es-AR')+'</strong></div>'+
+    '</div>'+
+    // IVA COMPRAS
+    '<div style="margin-bottom:16px;border-top:1px solid var(--brd);padding-top:14px">'+
+    '<div style="font-family:Oswald,sans-serif;font-weight:600;font-size:.9rem;color:var(--green);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">🧾 IVA en Compras (Proveedores)</div>'+
+    '<div class="rf"><span>Base imponible (neto compras)</span><strong>$'+netoCompras.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>IVA 21% compras</span><strong style="color:var(--green)">$'+ivaCompras21.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>IVA 10.5% compras</span><strong style="color:var(--green)">$'+ivaCompras105.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span style="font-weight:700">Total IVA compras (crédito fiscal)</span><strong style="color:var(--green);font-size:1rem">$'+totalIvaCompras.toLocaleString('es-AR')+'</strong></div>'+
+    '</div>'+
+    // SALDO
+    '<div style="border-top:2px solid var(--acc);padding-top:14px;margin-top:4px">'+
+    '<div style="font-family:Oswald,sans-serif;font-weight:600;font-size:.9rem;color:var(--acc);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📊 Saldo IVA</div>'+
+    '<div class="rf"><span>IVA Débito Fiscal (ventas)</span><strong>$'+totalIvaVentas.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>IVA Crédito Fiscal (compras)</span><strong>-$'+totalIvaCompras.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf" style="border-top:2px solid '+saldoColor+';margin-top:8px;padding-top:10px">'+
+    '<span style="font-family:Oswald,sans-serif;font-size:1.1rem;font-weight:700">'+saldoTxt+'</span>'+
+    '<strong style="color:'+saldoColor+';font-size:1.4rem;font-family:Oswald,sans-serif">$'+Math.abs(saldo).toLocaleString('es-AR')+'</strong></div>'+
+    '</div>'+
+    '<div style="margin-top:14px"><button class="btn btn-o" onclick="impIva(''+mesNom+' '+anio+'','+netoVentas+','+ivaVentas21+','+ivaVentas105+','+totalIvaVentas+','+netoCompras+','+ivaCompras21+','+ivaCompras105+','+totalIvaCompras+','+saldo+')">🖨️ Imprimir resumen IVA</button></div>'+
+    '</div>';
+}
+
+function impIva(per,nv,iv21,iv105,tiv,nc,ic21,ic105,tic,saldo){
+  var w=window.open('',"_blank");
+  var sColor=saldo>0?"#e74c3c":"#27ae60";
+  var sTxt=saldo>0?"A PAGAR a AFIP":"SALDO A FAVOR";
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen IVA</title>'+
+    '<style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;max-width:600px;margin:0 auto;}'+
+    'h1{font-size:1.3rem;margin-bottom:4px;}h2{font-size:.95rem;color:#555;font-weight:normal;margin-bottom:20px;}'+
+    '.sec{margin-bottom:16px;}.st{font-weight:700;font-size:.9rem;text-transform:uppercase;margin-bottom:8px;padding:6px 10px;border-radius:4px;}'+
+    '.ventas{background:#eaf4fb;color:#2980b9;}.compras{background:#eafaf1;color:#27ae60;}'+
+    '.f{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;}'+
+    '.saldo{margin-top:16px;border-top:2px solid '+sColor+';padding-top:12px;display:flex;justify-content:space-between;}'+
+    '.sp{font-weight:700;font-size:1rem;}.sv{font-size:1.3rem;font-weight:700;color:'+sColor+';}'+
+    '@page{size:A4 portrait;margin:20mm;}@media print{button{display:none!important;}}</style></head><body>'+
+    '<h1>🧾 TRANSPORTE VICENTE — Resumen IVA</h1>'+
+    '<h2>Período: '+per+'</h2>'+
+    '<div class="sec"><div class="st ventas">💰 IVA en Ventas (Clientes)</div>'+
+    '<div class="f"><span>Base imponible neta</span><strong>$'+nv.toLocaleString("es-AR")+'</strong></div>'+
+    '<div class="f"><span>IVA 21%</span><strong>$'+iv21.toLocaleString("es-AR")+'</strong></div>'+
+    '<div class="f"><span>IVA 10.5%</span><strong>$'+iv105.toLocaleString("es-AR")+'</strong></div>'+
+    '<div class="f"><span><strong>Total IVA ventas</strong></span><strong>$'+tiv.toLocaleString("es-AR")+'</strong></div></div>'+
+    '<div class="sec"><div class="st compras">🧾 IVA en Compras (Proveedores)</div>'+
+    '<div class="f"><span>Base imponible neta</span><strong>$'+nc.toLocaleString("es-AR")+'</strong></div>'+
+    '<div class="f"><span>IVA 21%</span><strong>$'+ic21.toLocaleString("es-AR")+'</strong></div>'+
+    '<div class="f"><span>IVA 10.5%</span><strong>$'+ic105.toLocaleString("es-AR")+'</strong></div>'+
+    '<div class="f"><span><strong>Total IVA compras</strong></span><strong>$'+tic.toLocaleString("es-AR")+'</strong></div></div>'+
+    '<div class="saldo"><span class="sp">'+sTxt+'</span><span class="sv">$'+Math.abs(saldo).toLocaleString("es-AR")+'</span></div><br>'+
+    '<button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button>'+
+    '</body></html>');
+  w.document.close();
 }
 
 // ==================== UTILS ====================
