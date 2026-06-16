@@ -1599,6 +1599,7 @@ function calcIva(){
   var saldoColor=saldo>0?'var(--red)':'var(--green)';
   var saldoTxt=saldo>0?'A PAGAR a AFIP':'SALDO A FAVOR';
 
+  window._ivaData={per:mesNom+' '+anio,nv:netoVentas,iv21:ivaVentas21,iv105:ivaVentas105,tiv:totalIvaVentas,nc:netoCompras,ic21:ivaCompras21,ic105:ivaCompras105,tic:totalIvaCompras,saldo:saldo};
   document.getElementById('riva').innerHTML=
     '<div class="card" style="max-width:700px">'+
     '<div class="ct">🧾 Resumen IVA — '+mesNom+' '+anio+'</div>'+
@@ -1627,10 +1628,15 @@ function calcIva(){
     '<span style="font-family:Oswald,sans-serif;font-size:1.1rem;font-weight:700">'+saldoTxt+'</span>'+
     '<strong style="color:'+saldoColor+';font-size:1.4rem;font-family:Oswald,sans-serif">$'+Math.abs(saldo).toLocaleString('es-AR')+'</strong></div>'+
     '</div>'+
-    '<div style="margin-top:14px"><button class="btn btn-o" onclick="impIva(''+mesNom+' '+anio+'','+netoVentas+','+ivaVentas21+','+ivaVentas105+','+totalIvaVentas+','+netoCompras+','+ivaCompras21+','+ivaCompras105+','+totalIvaCompras+','+saldo+')">🖨️ Imprimir resumen IVA</button></div>'+
+    '<div style="margin-top:14px"><button class="btn btn-o" onclick="impIvaD()">🖨️ Imprimir resumen IVA</button></div>'+
     '</div>';
 }
 
+function impIvaD(){
+  var d=window._ivaData;
+  if(!d)return;
+  impIva(d.per,d.nv,d.iv21,d.iv105,d.tiv,d.nc,d.ic21,d.ic105,d.tic,d.saldo);
+}
 function impIva(per,nv,iv21,iv105,tiv,nc,ic21,ic105,tic,saldo){
   var w=window.open('',"_blank");
   var sColor=saldo>0?"#e74c3c":"#27ae60";
