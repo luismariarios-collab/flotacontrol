@@ -845,7 +845,7 @@ async function guardarViaje(){
   var pgl=parseFloat(document.getElementById('vpgl').value)||0;
   var adv=parseFloat(document.getElementById('va').value)||0;
   var obs=document.getElementById('vobs').value.trim();
-  var cliId=document.getElementById('vcli')?document.getElementById('vcli').value:'';
+  var cliId=(document.getElementById('vcli')&&document.getElementById('vcli').value)?document.getElementById('vcli').value:null;
   var gs=getGastos();
   if(!cid){alert('Seleccioná un camión.');return;}
   if(!f){alert('Ingresá la fecha.');return;}
