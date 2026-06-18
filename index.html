@@ -793,7 +793,7 @@ function renderCamiones(){
       (c.modelo?'<div class="cm">'+c.modelo+'</div>':'')+
       (c.chofer?'<div class="cm">👤 '+c.chofer+'</div>':'')+
       (c.rend?'<div class="cm">⛽ '+c.rend+' km/L</div>':'')+
-      '<div class="cs">$'+tot.toLocaleString('es-AR')+' · '+vs.length+' viaje(s)</div></div>';
+      '<div class="cs">$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+' · '+vs.length+' viaje(s)</div></div>';
   }).join('');
 }
 
@@ -844,18 +844,29 @@ async function guardarViaje(){
   if(!cid){alert('Seleccioná un camión.');return;}
   if(!f){alert('Ingresá la fecha.');return;}
   if(!o||!d){alert('Ingresá origen y destino.');return;}
+  var btnSave=document.getElementById('fv-btn');
+  if(btnSave){btnSave.disabled=true;btnSave.textContent='⏳ Guardando...';}
   loading(true);
   if(editVId){
     var data={cid:cid,f:f,o:o,d:d,km:km,lt:lt,pgl:pgl,adv:adv,gs:gs,obs:obs,cliId:cliId};
-    await sb('viajes?id=eq.'+editVId,'PATCH',data);
+    var resE=await sb('viajes?id=eq.'+editVId,'PATCH',data);
     var idx=D.viajes.findIndex(function(v){return v.id===editVId;});
     if(idx>=0)D.viajes[idx]=Object.assign(D.viajes[idx],data);
-    toast('✅ Viaje actualizado');
+    if(btnSave){btnSave.disabled=false;btnSave.textContent='✓ Actualizar Viaje';}
+    toast('✅ Viaje actualizado correctamente');
   } else {
     var nv={id:Date.now(),cid:cid,f:f,o:o,d:d,km:km,lt:lt,pgl:pgl,adv:adv,gs:gs,obs:obs,cliId:cliId};
     var res=await sb('viajes','POST',nv);
-    D.viajes.unshift(res&&res[0]?res[0]:nv);
-    toast('✅ Viaje guardado');
+    if(res&&res[0]){
+      D.viajes.unshift(res[0]);
+      toast('✅ Viaje guardado correctamente en la nube');
+    } else {
+      toast('⚠️ Error al guardar — verificá la conexión','var(--red)');
+      if(btnSave){btnSave.disabled=false;btnSave.textContent='✓ Guardar Viaje';}
+      loading(false);
+      return;
+    }
+    if(btnSave){btnSave.disabled=false;btnSave.textContent='✓ Guardar Viaje';}
   }
   loading(false);
   ['vk','vl','vpgl','va','vobs','vo','vd'].forEach(function(id){document.getElementById(id).value='';});
@@ -932,8 +943,8 @@ function renderViajes(){
         '<div style="font-family:Oswald,sans-serif;font-weight:700;font-size:1rem;color:var(--acc);margin-bottom:10px;">📊 Resumen — 🚛 '+(cam?cam.patente:'')+(cam&&cam.chofer?' · 👤 '+cam.chofer:'')+(fm?' · '+fm:'')+'</div>'+
         '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">'+
         '<div style="text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.4rem;font-weight:700;color:var(--blue)">'+vs.length+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Viajes</div></div>'+
-        '<div style="text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.4rem;font-weight:700;color:var(--green)">'+tkm.toLocaleString('es-AR')+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Km</div></div>'+
-        '<div style="text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.4rem;font-weight:700;color:var(--yellow)">'+tlt.toLocaleString('es-AR')+'L</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Gasoil</div></div>'+
+        '<div style="text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.4rem;font-weight:700;color:var(--green)">'+tkm.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Km</div></div>'+
+        '<div style="text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.4rem;font-weight:700;color:var(--yellow)">'+tlt.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'L</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Gasoil</div></div>'+
         '<div style="text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.4rem;font-weight:700;color:var(--acc)">$'+abr(tadv)+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Adelantos</div></div>'+
         '<div style="text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.4rem;font-weight:700;color:var(--acc2)">$'+abr(ttot)+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Total gastos</div></div>'+
         '</div></div>';
@@ -956,12 +967,12 @@ function renderViajes(){
       '<td><span style="background:rgba(56,189,248,.1);color:var(--blue);font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;white-space:nowrap;">'+pat+'</span>'+(cam&&cam.chofer?'<br><span style="font-size:.68rem;color:var(--dim)">'+cam.chofer+'</span>':'')+'</td>'+
       '<td class="td">'+(cli?'<span style="color:var(--green);font-size:.78rem">'+cli.nom+'</span>':'—')+'</td>'+
       '<td style="font-weight:600;white-space:nowrap">'+v.o+'<span style="color:var(--acc);margin:0 4px">→</span>'+v.d+'</td>'+
-      '<td class="td">'+(v.km?v.km.toLocaleString('es-AR'):'—')+'</td>'+
+      '<td class="td">'+(v.km?v.km.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</td>'+
       '<td class="td">'+(v.lt?v.lt+'L':'—')+'</td>'+
       '<td class="ty">'+rr+'</td>'+
-      '<td class="td">'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—')+'</td>'+
-      '<td class="td">'+(sg>0?'$'+sg.toLocaleString('es-AR'):'—')+'</td>'+
-      '<td class="ta">$'+tot.toLocaleString('es-AR')+'</td>'+
+      '<td class="td">'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</td>'+
+      '<td class="td">'+(sg>0?'$'+sg.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</td>'+
+      '<td class="ta">$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
       '<td style="white-space:nowrap"><button class="btn-del" onclick="showDet('+v.id+')">Ver</button> <button class="btn-del" style="color:var(--blue)" onclick="editViaje('+v.id+')">✏️</button> <button class="btn-del" onclick="delViaje('+v.id+')">✕</button></td></tr>';
   }).join('');
 }
@@ -972,18 +983,18 @@ function showDet(id){
   var cam=D.camiones.find(function(c){return c.id===v.cid;});
   var tot=tvTot(v);
   var rr=(v.km&&v.lt)?(v.km/v.lt).toFixed(1)+' km/L':'—';
-  var gRows=(v.gs||[]).map(function(g){return '<div class="dr"><span>'+(TICO[g.tipo]||'📦')+' '+g.tipo+'</span><span>$'+g.monto.toLocaleString('es-AR')+'</span></div>';}).join('');
+  var gRows=(v.gs||[]).map(function(g){return '<div class="dr"><span>'+(TICO[g.tipo]||'📦')+' '+g.tipo+'</span><span>$'+g.monto.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>';}).join('');
   document.getElementById('mbd').innerHTML=
     '<div class="dr"><span>📅 Fecha</span><span>'+fmt(v.f)+'</span></div>'+
     '<div class="dr"><span>🚛 Camión</span><span>'+(cam?cam.patente+'  '+(cam.chofer||''):'?')+'</span></div>'+
     '<div class="dr"><span>📍 Origen</span><span>'+v.o+'</span></div>'+
     '<div class="dr"><span>🏁 Destino</span><span>'+v.d+'</span></div>'+
-    '<div class="dr"><span>📏 Kilómetros</span><span>'+(v.km?v.km.toLocaleString('es-AR')+' km':'—')+'</span></div>'+
+    '<div class="dr"><span>📏 Kilómetros</span><span>'+(v.km?v.km.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km':'—')+'</span></div>'+
     '<div class="dr"><span>⛽ Gasoil</span><span>'+(v.lt?v.lt+' L':'—')+'</span></div>'+
     '<div class="dr"><span>📈 Rendimiento</span><span>'+rr+'</span></div>'+
-    '<div class="dr"><span>💵 Adelanto</span><span>'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—')+'</span></div>'+
+    '<div class="dr"><span>💵 Adelanto</span><span>'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</span></div>'+
     gRows+(v.obs?'<div class="dr"><span>📝 Notas</span><span>'+v.obs+'</span></div>':'')+
-    '<div class="dr tot"><span>TOTAL VIAJE</span><span>$'+tot.toLocaleString('es-AR')+'</span></div>';
+    '<div class="dr tot"><span>TOTAL VIAJE</span><span>$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>';
   document.getElementById('mbg').classList.add('on');
 }
 function closeMod(){document.getElementById('mbg').classList.remove('on');}
@@ -1021,7 +1032,7 @@ function renderTarifas(){
   if(!D.tarifas.length){el.innerHTML='<div class="empty"><div class="ei">💰</div>Sin tarifas.</div>';return;}
   el.innerHTML='<div class="tw"><table><thead><tr><th>Origen</th><th>Destino</th><th>Precio</th><th>Moneda</th><th>Notas</th><th></th></tr></thead><tbody>'+
     D.tarifas.map(function(t){
-      return '<tr><td>'+t.o+'</td><td>'+t.d+'</td><td class="ta">'+(t.m==='USD'?'U$D':'$')+t.p.toLocaleString('es-AR')+'</td><td class="td">'+t.m+'</td><td class="td">'+(t.obs||'—')+'</td><td><button class="btn-del" onclick="delTarifa('+t.id+')">✕</button></td></tr>';
+      return '<tr><td>'+t.o+'</td><td>'+t.d+'</td><td class="ta">'+(t.m==='USD'?'U$D':'$')+t.p.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="td">'+t.m+'</td><td class="td">'+(t.obs||'—')+'</td><td><button class="btn-del" onclick="delTarifa('+t.id+')">✕</button></td></tr>';
     }).join('')+'</tbody></table></div>';
 }
 
@@ -1075,21 +1086,21 @@ function renderLiq(cam,vs,desde,hasta,tkm,tlt,tadv,tgas){
     // Stats grid
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'+
     '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--blue)">'+vs.length+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Viajes</div></div>'+
-    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--green)">'+kmFinal.toLocaleString('es-AR')+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Km recorridos</div></div>'+
-    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--yellow)">'+tlt.toLocaleString('es-AR')+'L</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Gasoil</div></div>'+
+    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--green)">'+kmFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Km recorridos</div></div>'+
+    '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--yellow)">'+tlt.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'L</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Gasoil</div></div>'+
     '<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center"><div style="font-family:Oswald,sans-serif;font-size:1.3rem;font-weight:700;color:var(--yellow)">'+rr+'</div><div style="font-size:.68rem;color:var(--dim);text-transform:uppercase">Rendimiento</div></div>'+
     '</div>'+
     // Calculo
     '<div style="border-top:1px solid var(--brd);padding-top:12px">'+
-    (pkm>0?'<div class="rf"><span>📍 Pago por km ('+kmFinal.toLocaleString('es-AR')+' km × $'+pkm.toLocaleString('es-AR')+')</span><strong style="color:var(--green)">$'+porKm.toLocaleString('es-AR')+'</strong></div>':'')+
-    (fijo>0?'<div class="rf"><span>💵 Sueldo fijo</span><strong style="color:var(--green)">$'+fijo.toLocaleString('es-AR')+'</strong></div>':'')+
-    '<div class="rf"><span style="font-weight:700">TOTAL BRUTO</span><strong style="color:var(--acc);font-size:1rem">$'+bruto.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span>💵 Adelantos descontados</span><strong style="color:var(--red)">-$'+advFinal.toLocaleString('es-AR')+'</strong></div>'+
-    (gasFinal>0?'<div class="rf"><span>🧾 Total gastos del período</span><strong style="color:var(--dim)">$'+gasFinal.toLocaleString('es-AR')+'</strong></div>':'')+
+    (pkm>0?'<div class="rf"><span>📍 Pago por km ('+kmFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km × $'+pkm.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+')</span><strong style="color:var(--green)">$'+porKm.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>':'')+
+    (fijo>0?'<div class="rf"><span>💵 Sueldo fijo</span><strong style="color:var(--green)">$'+fijo.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>':'')+
+    '<div class="rf"><span style="font-weight:700">TOTAL BRUTO</span><strong style="color:var(--acc);font-size:1rem">$'+bruto.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span>💵 Adelantos descontados</span><strong style="color:var(--red)">-$'+advFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    (gasFinal>0?'<div class="rf"><span>🧾 Total gastos del período</span><strong style="color:var(--dim)">$'+gasFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>':'')+
     '<div class="rf" style="border-top:2px solid var(--acc);margin-top:8px;padding-top:10px">'+
     '<span style="font-family:Oswald,sans-serif;font-size:1.1rem;font-weight:700">💰 A PAGAR</span>'+
-    '<strong style="color:var(--green);font-size:1.4rem;font-family:Oswald,sans-serif">$'+netoFinal.toLocaleString('es-AR')+'</strong></div>'+
-    (saldoFavor>0?'<div style="background:rgba(251,191,36,.1);border:1px solid var(--yellow);border-radius:8px;padding:10px;margin-top:10px;font-size:.82rem;color:var(--yellow)">⚠️ Los adelantos superan el total bruto. Saldo a favor del empleador: <strong>$'+saldoFavor.toLocaleString('es-AR')+'</strong></div>':'')+
+    '<strong style="color:var(--green);font-size:1.4rem;font-family:Oswald,sans-serif">$'+netoFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    (saldoFavor>0?'<div style="background:rgba(251,191,36,.1);border:1px solid var(--yellow);border-radius:8px;padding:10px;margin-top:10px;font-size:.82rem;color:var(--yellow)">⚠️ Los adelantos superan el total bruto. Saldo a favor del empleador: <strong>$'+saldoFavor.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>':'')+
     '</div>'+
     '<div style="display:flex;gap:10px;margin-top:14px">'+
     '<button class="btn btn-p" onclick="recalcLiq()">🔄 Recalcular</button>'+
@@ -1135,12 +1146,12 @@ function renderClientes(){
   el.innerHTML='<div class="tw"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>CUIT/DNI</th><th>Teléfono</th><th>Documentos</th><th>Total facturado</th><th></th></tr></thead><tbody>'+
     D.clientes.map(function(c){
       var docs=c.docs||[];
-      var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
+      var tot=docs.reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
       var pend=docs.filter(function(d){return d.estado==='Pendiente';}).length;
       return '<tr><td><strong style="cursor:pointer;color:var(--acc)" onclick="abrirCl('+c.id+')">'+c.nom+'</strong></td>'+
         '<td class="td">'+c.tipo+'</td><td class="td">'+(c.cuit||'—')+'</td><td class="td">'+(c.tel||'—')+'</td>'+
         '<td>'+docs.length+' doc'+(docs.length!==1?'s':'')+(pend>0?'<br><span style="color:var(--yellow);font-size:.72rem">'+pend+' pendiente(s)</span>':'')+'</td>'+
-        '<td class="ta">$'+tot.toLocaleString('es-AR')+'</td>'+
+        '<td class="ta">$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td><button class="btn btn-o" style="padding:4px 10px;font-size:.75rem;margin-right:4px" onclick="abrirCl('+c.id+')">Ver</button><button class="btn-del" onclick="delCliente('+c.id+')">✕</button></td></tr>';
     }).join('')+'</tbody></table></div>';
 }
@@ -1211,17 +1222,17 @@ function renderDocsCl(){
   if(!c||!el)return;
   var docs=(c.docs||[]).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
   if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos.</div>';return;}
-  var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
-  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.monto||0);},0);
+  var tot=docs.reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
+  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
   el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">'+
-    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total facturado</div></div>'+
-    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente cobro</div></div>'+
+    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total facturado (c/IVA)</div></div>'+
+    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente cobro (c/IVA)</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
     '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Total c/IVA</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Cobrado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
-        '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR')+'</td>'+
+        '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td><select onchange="cambEstadoCl('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
         '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
         '<option value="Cobrado"'+(d.estado==='Cobrado'?' selected':'')+'>✅ Cobrado</option>'+
@@ -1262,12 +1273,12 @@ function renderProveedores(){
   el.innerHTML='<div class="tw"><table><thead><tr><th>Nombre</th><th>Rubro</th><th>CUIT</th><th>Teléfono</th><th>Documentos</th><th>Total comprado</th><th></th></tr></thead><tbody>'+
     D.proveedores.map(function(p){
       var docs=p.docs||[];
-      var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
+      var tot=docs.reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
       var pend=docs.filter(function(d){return d.estado==='Pendiente';}).length;
       return '<tr><td><strong style="cursor:pointer;color:var(--acc)" onclick="abrirPv('+p.id+')">'+p.nom+'</strong></td>'+
         '<td class="td">'+p.rubro+'</td><td class="td">'+(p.cuit||'—')+'</td><td class="td">'+(p.tel||'—')+'</td>'+
         '<td>'+docs.length+' doc'+(docs.length!==1?'s':'')+(pend>0?'<br><span style="color:var(--yellow);font-size:.72rem">'+pend+' pendiente(s)</span>':'')+'</td>'+
-        '<td class="ta">$'+tot.toLocaleString('es-AR')+'</td>'+
+        '<td class="ta">$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td><button class="btn btn-o" style="padding:4px 10px;font-size:.75rem;margin-right:4px" onclick="abrirPv('+p.id+')">Ver</button><button class="btn-del" onclick="delProv('+p.id+')">✕</button></td></tr>';
     }).join('')+'</tbody></table></div>';
 }
@@ -1337,17 +1348,17 @@ function renderDocsPv(){
   if(!p||!el)return;
   var docs=(p.docs||[]).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
   if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos.</div>';return;}
-  var tot=docs.reduce(function(s,d){return s+(d.monto||0);},0);
-  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.monto||0);},0);
+  var tot=docs.reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
+  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
   el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">'+
-    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total comprado</div></div>'+
-    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente pago</div></div>'+
+    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total comprado (c/IVA)</div></div>'+
+    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente pago (c/IVA)</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
     '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Total c/IVA</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Pagado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
-        '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR')+'</td>'+
+        '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td><select onchange="cambEstadoPv('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
         '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
         '<option value="Pagado"'+(d.estado==='Pagado'?' selected':'')+'>✅ Pagado</option>'+
@@ -1382,7 +1393,7 @@ function renderDash(){
   if(duv){
     if(!ult.length){duv.innerHTML='<div class="empty"><div class="ei">🗺️</div>Sin viajes.</div>';return;}
     duv.innerHTML='<div class="tw"><table><thead><tr><th>Fecha</th><th>Ruta</th><th>Total</th></tr></thead><tbody>'+
-      ult.map(function(v){var c=D.camiones.find(function(x){return x.id===v.cid;});return '<tr><td class="td">'+fmt(v.f)+'</td><td style="font-weight:600">'+v.o+'<span style="color:var(--acc);margin:0 4px">→</span>'+v.d+'<br><span class="td">'+(c?c.patente:'?')+'</span></td><td class="ta">$'+tvTot(v).toLocaleString('es-AR')+'</td></tr>';}).join('')+
+      ult.map(function(v){var c=D.camiones.find(function(x){return x.id===v.cid;});return '<tr><td class="td">'+fmt(v.f)+'</td><td style="font-weight:600">'+v.o+'<span style="color:var(--acc);margin:0 4px">→</span>'+v.d+'<br><span class="td">'+(c?c.patente:'?')+'</span></td><td class="ta">$'+tvTot(v).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';}).join('')+
     '</tbody></table></div>';
   }
   var dca=document.getElementById('dca');
@@ -1393,7 +1404,7 @@ function renderDash(){
       var tot=vs.reduce(function(s,v){return s+tvTot(v);},0);
       return '<div style="background:var(--s1);border:1px solid var(--brd);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
         '<div><div style="font-family:Oswald,sans-serif;font-weight:700;color:var(--acc)">'+c.patente+'</div><div style="font-size:.75rem;color:var(--dim)">'+(c.chofer||'Sin chofer')+'</div></div>'+
-        '<div style="text-align:right"><div style="font-family:Oswald,sans-serif;font-weight:700">$'+tot.toLocaleString('es-AR')+'</div><div style="font-size:.72rem;color:var(--dim)">'+vs.length+' viaje(s)</div></div></div>';
+        '<div style="text-align:right"><div style="font-family:Oswald,sans-serif;font-weight:700">$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div style="font-size:.72rem;color:var(--dim)">'+vs.length+' viaje(s)</div></div></div>';
     }).join('');
   }
 }
@@ -1420,16 +1431,16 @@ function renderResumen(){
     var rr=lt>0?(km/lt).toFixed(1):'—';
     var pt={};
     vs.forEach(function(v){(v.gs||[]).forEach(function(g){pt[g.tipo]=(pt[g.tipo]||0)+g.monto;});});
-    var tr2=Object.entries(pt).map(function(e){return '<div class="rf"><span>'+(TICO[e[0]]||'📦')+' '+e[0]+'</span><strong>$'+e[1].toLocaleString('es-AR')+'</strong></div>';}).join('');
+    var tr2=Object.entries(pt).map(function(e){return '<div class="rf"><span>'+(TICO[e[0]]||'📦')+' '+e[0]+'</span><strong>$'+e[1].toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>';}).join('');
     return '<div class="rcc"><div class="rch"><div>'+
       '<div style="font-family:Oswald,sans-serif;font-weight:700;font-size:1.05rem;color:var(--acc)">🚛 '+c.patente+'</div>'+
       (c.chofer?'<div style="font-size:.72rem;color:var(--dim)">👤 '+c.chofer+'</div>':'')+
-      '</div><div style="font-family:Oswald,sans-serif;font-weight:700;font-size:1.1rem">$'+tot.toLocaleString('es-AR')+'</div></div>'+
+      '</div><div style="font-family:Oswald,sans-serif;font-weight:700;font-size:1.1rem">$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div></div>'+
       '<div class="rcb">'+
-      '<div class="rf"><span>📍 Km</span><strong>'+km.toLocaleString('es-AR')+' km</strong></div>'+
-      '<div class="rf"><span>⛽ Gasoil</span><strong>'+lt.toLocaleString('es-AR')+' L</strong></div>'+
+      '<div class="rf"><span>📍 Km</span><strong>'+km.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km</strong></div>'+
+      '<div class="rf"><span>⛽ Gasoil</span><strong>'+lt.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+' L</strong></div>'+
       '<div class="rf"><span>📈 Rendimiento</span><strong>'+rr+' km/L</strong></div>'+
-      '<div class="rf"><span>💵 Adelantos</span><strong>$'+adv.toLocaleString('es-AR')+'</strong></div>'+
+      '<div class="rf"><span>💵 Adelantos</span><strong>$'+adv.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
       '<div class="rf"><span>🗺️ Viajes</span><strong>'+vs.length+'</strong></div>'+
       tr2+'</div></div>';
   }).join('');
@@ -1466,9 +1477,9 @@ function impViajes(){
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen de Viajes</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:4px;}h2{font-size:1rem;color:#555;font-weight:normal;margin-bottom:20px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid #ccc;}td{padding:7px 10px;border-bottom:1px solid #eee;}.tot{font-weight:700;}.res{background:#f9f9f9;padding:14px;border-radius:8px;margin-bottom:20px;display:flex;gap:30px;}.ri{text-align:center;}.rv{font-size:1.4rem;font-weight:700;color:#f97316;}.rl{font-size:.7rem;text-transform:uppercase;color:#888;}@media print{button{display:none!important;}}</style></head><body>'+
     '<h1>🚛 TRANSPORTE VICENTE — Resumen de viajes</h1>'+
     '<h2>'+(cam?'Camión: '+cam.patente+' '+(cam.chofer||''):'Todos los camiones')+' · '+(desde?fmt(desde):'inicio')+' al '+(hasta?fmt(hasta):'hoy')+'</h2>'+
-    '<div class="res"><div class="ri"><div class="rv">'+vs.length+'</div><div class="rl">Viajes</div></div><div class="ri"><div class="rv">'+tKm.toLocaleString('es-AR')+'</div><div class="rl">Kilómetros</div></div><div class="ri"><div class="rv">$'+tG.toLocaleString('es-AR')+'</div><div class="rl">Total gastos</div></div></div>'+
+    '<div class="res"><div class="ri"><div class="rv">'+vs.length+'</div><div class="rl">Viajes</div></div><div class="ri"><div class="rv">'+tKm.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="rl">Kilómetros</div></div><div class="ri"><div class="rv">$'+tG.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="rl">Total gastos</div></div></div>'+
     '<table><thead><tr><th>Fecha</th><th>Camión</th><th>Origen</th><th>Destino</th><th>Km</th><th>Gasoil</th><th>Adelanto</th><th>Gastos</th><th>Total</th></tr></thead><tbody>'+
-    vs.map(function(v){var c=D.camiones.find(function(x){return x.id===v.cid;});var sg=(v.gs||[]).reduce(function(s,g){return s+g.monto;},0);return '<tr><td>'+fmt(v.f)+'</td><td>'+(c?c.patente:'?')+'</td><td>'+v.o+'</td><td>'+v.d+'</td><td>'+(v.km||'—')+'</td><td>'+(v.lt?v.lt+'L':'—')+'</td><td>'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR'):'—')+'</td><td>'+(sg>0?'$'+sg.toLocaleString('es-AR'):'—')+'</td><td class="tot">$'+tvTot(v).toLocaleString('es-AR')+'</td></tr>';}).join('')+
+    vs.map(function(v){var c=D.camiones.find(function(x){return x.id===v.cid;});var sg=(v.gs||[]).reduce(function(s,g){return s+g.monto;},0);return '<tr><td>'+fmt(v.f)+'</td><td>'+(c?c.patente:'?')+'</td><td>'+v.o+'</td><td>'+v.d+'</td><td>'+(v.km||'—')+'</td><td>'+(v.lt?v.lt+'L':'—')+'</td><td>'+(v.adv>0?'$'+v.adv.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</td><td>'+(sg>0?'$'+sg.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</td><td class="tot">$'+tvTot(v).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';}).join('')+
     '</tbody></table><button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button></body></html>');
   w.document.close();
 }
@@ -1482,7 +1493,7 @@ function impResumen(){
     var tot=vs.reduce(function(s,v){return s+tvTot(v);},0);
     var adv=vs.reduce(function(s,v){return s+(v.adv||0);},0);
     var rr=lt>0?(km/lt).toFixed(1):'—';
-    return '<tr><td>'+c.patente+'</td><td>'+(c.chofer||'—')+'</td><td>'+vs.length+'</td><td>'+km.toLocaleString('es-AR')+'</td><td>'+lt.toLocaleString('es-AR')+'</td><td>'+rr+'</td><td>$'+adv.toLocaleString('es-AR')+'</td><td class="tot">$'+tot.toLocaleString('es-AR')+'</td></tr>';
+    return '<tr><td>'+c.patente+'</td><td>'+(c.chofer||'—')+'</td><td>'+vs.length+'</td><td>'+km.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>'+lt.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>'+rr+'</td><td>$'+adv.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="tot">$'+tot.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
   }).join('');
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resumen por Camión</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;}h1{font-size:1.4rem;margin-bottom:20px;}table{width:100%;border-collapse:collapse;}th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid #ccc;}td{padding:7px 10px;border-bottom:1px solid #eee;}.tot{font-weight:700;color:#f97316;}@media print{button{display:none!important;}}</style></head><body>'+
     '<h1>🚛 TRANSPORTE VICENTE — Resumen por camión</h1>'+
@@ -1507,16 +1518,16 @@ function impLiq(){
     '<h2>'+lq.cam.patente+(lq.cam.chofer?' / '+lq.cam.chofer:'')+' · '+(lq.desde?fmt(lq.desde):'inicio')+' al '+(lq.hasta?fmt(lq.hasta):'hoy')+'</h2>'+
     '<div class="grid">'+
     '<div class="gi"><div class="gv">'+lq.vs.length+'</div><div class="gl">Viajes</div></div>'+
-    '<div class="gi"><div class="gv">'+lq.kmFinal.toLocaleString('es-AR')+'</div><div class="gl">Km recorridos</div></div>'+
-    '<div class="gi"><div class="gv">'+lq.tlt.toLocaleString('es-AR')+'L</div><div class="gl">Gasoil</div></div>'+
+    '<div class="gi"><div class="gv">'+lq.kmFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gl">Km recorridos</div></div>'+
+    '<div class="gi"><div class="gv">'+lq.tlt.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'L</div><div class="gl">Gasoil</div></div>'+
     '<div class="gi"><div class="gv">'+lq.rr+'</div><div class="gl">Rendimiento</div></div>'+
     '</div>'+
-    (lq.pkm>0?'<div class="f"><span>📍 Pago por km ('+lq.kmFinal.toLocaleString('es-AR')+' km × $'+lq.pkm.toLocaleString('es-AR')+')</span><strong>$'+lq.porKm.toLocaleString('es-AR')+'</strong></div>':'')+
-    (lq.fijo>0?'<div class="f"><span>💵 Sueldo fijo</span><strong>$'+lq.fijo.toLocaleString('es-AR')+'</strong></div>':'')+
-    '<div class="f"><span>TOTAL BRUTO</span><strong>$'+lq.bruto.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="f"><span>➖ Adelantos descontados</span><strong>-$'+lq.advFinal.toLocaleString('es-AR')+'</strong></div>'+
-    (lq.gasFinal>0?'<div class="f"><span>🧾 Total gastos del período</span><strong>$'+lq.gasFinal.toLocaleString('es-AR')+'</strong></div>':'')+
-    '<div class="f tot"><span>💰 A PAGAR</span><span class="pay">$'+lq.neto.toLocaleString('es-AR')+'</span></div><br>'+
+    (lq.pkm>0?'<div class="f"><span>📍 Pago por km ('+lq.kmFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km × $'+lq.pkm.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+')</span><strong>$'+lq.porKm.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>':'')+
+    (lq.fijo>0?'<div class="f"><span>💵 Sueldo fijo</span><strong>$'+lq.fijo.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>':'')+
+    '<div class="f"><span>TOTAL BRUTO</span><strong>$'+lq.bruto.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="f"><span>➖ Adelantos descontados</span><strong>-$'+lq.advFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    (lq.gasFinal>0?'<div class="f"><span>🧾 Total gastos del período</span><strong>$'+lq.gasFinal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>':'')+
+    '<div class="f tot"><span>💰 A PAGAR</span><span class="pay">$'+lq.neto.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div><br>'+
     '<button onclick="window.print()" style="background:#f97316;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;">🖨️ Imprimir</button>'+
     '</body></html>');
   w.document.close();
@@ -1606,27 +1617,27 @@ function calcIva(){
     // IVA VENTAS
     '<div style="margin-bottom:16px">'+
     '<div style="font-family:Oswald,sans-serif;font-weight:600;font-size:.9rem;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">💰 IVA en Ventas (Clientes)</div>'+
-    '<div class="rf"><span>Base imponible (neto ventas)</span><strong>$'+netoVentas.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span>IVA 21% ventas</span><strong style="color:var(--blue)">$'+ivaVentas21.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span>IVA 10.5% ventas</span><strong style="color:var(--blue)">$'+ivaVentas105.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span style="font-weight:700">Total IVA ventas</span><strong style="color:var(--blue);font-size:1rem">$'+totalIvaVentas.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>Base imponible (neto ventas)</span><strong>$'+netoVentas.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span>IVA 21% ventas</span><strong style="color:var(--blue)">$'+ivaVentas21.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span>IVA 10.5% ventas</span><strong style="color:var(--blue)">$'+ivaVentas105.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span style="font-weight:700">Total IVA ventas</span><strong style="color:var(--blue);font-size:1rem">$'+totalIvaVentas.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
     '</div>'+
     // IVA COMPRAS
     '<div style="margin-bottom:16px;border-top:1px solid var(--brd);padding-top:14px">'+
     '<div style="font-family:Oswald,sans-serif;font-weight:600;font-size:.9rem;color:var(--green);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">🧾 IVA en Compras (Proveedores)</div>'+
-    '<div class="rf"><span>Base imponible (neto compras)</span><strong>$'+netoCompras.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span>IVA 21% compras</span><strong style="color:var(--green)">$'+ivaCompras21.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span>IVA 10.5% compras</span><strong style="color:var(--green)">$'+ivaCompras105.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span style="font-weight:700">Total IVA compras (crédito fiscal)</span><strong style="color:var(--green);font-size:1rem">$'+totalIvaCompras.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>Base imponible (neto compras)</span><strong>$'+netoCompras.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span>IVA 21% compras</span><strong style="color:var(--green)">$'+ivaCompras21.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span>IVA 10.5% compras</span><strong style="color:var(--green)">$'+ivaCompras105.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span style="font-weight:700">Total IVA compras (crédito fiscal)</span><strong style="color:var(--green);font-size:1rem">$'+totalIvaCompras.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
     '</div>'+
     // SALDO
     '<div style="border-top:2px solid var(--acc);padding-top:14px;margin-top:4px">'+
     '<div style="font-family:Oswald,sans-serif;font-weight:600;font-size:.9rem;color:var(--acc);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📊 Saldo IVA</div>'+
-    '<div class="rf"><span>IVA Débito Fiscal (ventas)</span><strong>$'+totalIvaVentas.toLocaleString('es-AR')+'</strong></div>'+
-    '<div class="rf"><span>IVA Crédito Fiscal (compras)</span><strong>-$'+totalIvaCompras.toLocaleString('es-AR')+'</strong></div>'+
+    '<div class="rf"><span>IVA Débito Fiscal (ventas)</span><strong>$'+totalIvaVentas.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
+    '<div class="rf"><span>IVA Crédito Fiscal (compras)</span><strong>-$'+totalIvaCompras.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
     '<div class="rf" style="border-top:2px solid '+saldoColor+';margin-top:8px;padding-top:10px">'+
     '<span style="font-family:Oswald,sans-serif;font-size:1.1rem;font-weight:700">'+saldoTxt+'</span>'+
-    '<strong style="color:'+saldoColor+';font-size:1.4rem;font-family:Oswald,sans-serif">$'+Math.abs(saldo).toLocaleString('es-AR')+'</strong></div>'+
+    '<strong style="color:'+saldoColor+';font-size:1.4rem;font-family:Oswald,sans-serif">$'+Math.abs(saldo).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong></div>'+
     '</div>'+
     '<div style="margin-top:14px"><button class="btn btn-o" onclick="impIvaD()">🖨️ Imprimir resumen IVA</button></div>'+
     '</div>';
@@ -1670,7 +1681,7 @@ function impIva(per,nv,iv21,iv105,tiv,nc,ic21,ic105,tic,saldo){
 
 // ==================== UTILS ====================
 function fmt(f){if(!f)return'';var p=f.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
-function abr(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(0)+'K';return Math.round(n).toLocaleString('es-AR');}
+function abr(n){return n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
 // ==================== INIT ====================
 document.getElementById('vf').valueAsDate=new Date();
