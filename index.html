@@ -594,6 +594,12 @@ tbody td{padding:10px 14px;vertical-align:middle;}
             <div class="ct">Backup de datos</div>
             <p style="font-size:.85rem;color:var(--dim);margin-bottom:14px;line-height:1.6">Los datos están guardados en Supabase (nube). El backup es un respaldo adicional en JSON.</p>
             <button class="btn btn-p" onclick="exportData()" style="margin-bottom:10px">💾 Exportar backup (JSON)</button>
+            <br/>
+            <div style="margin-top:12px">
+              <label style="font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px">Restaurar desde backup</label>
+              <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="font-size:.82rem;color:var(--dim);"/>
+              <div style="font-size:.68rem;color:var(--dim);margin-top:6px">⚠️ Al restaurar se reemplazarán los datos actuales en Supabase.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1534,6 +1540,43 @@ function impLiq(){
 }
 
 // ==================== EXPORT ====================
+async function importData(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  if(!confirm('¿Restaurar backup? Esto reemplazará los datos actuales en Supabase. ¿Estás seguro?'))return;
+  var r=new FileReader();
+  r.onload=async function(ev){
+    try{
+      var bk=JSON.parse(ev.target.result);
+      if(!bk.camiones||!bk.viajes){alert('Archivo inválido.');return;}
+      loading(true);
+      // Delete existing and reinsert
+      toast('⏳ Restaurando datos...','var(--blue)');
+      // Insert camiones
+      for(var i=0;i<bk.camiones.length;i++){
+        await sb('camiones','POST',bk.camiones[i]);
+      }
+      // Insert viajes
+      for(var i=0;i<bk.viajes.length;i++){
+        await sb('viajes','POST',bk.viajes[i]);
+      }
+      // Insert tarifas
+      if(bk.tarifas){for(var i=0;i<bk.tarifas.length;i++){await sb('tarifas','POST',bk.tarifas[i]);}}
+      // Insert clientes
+      if(bk.clientes){for(var i=0;i<bk.clientes.length;i++){await sb('clientes','POST',bk.clientes[i]);}}
+      // Insert proveedores
+      if(bk.proveedores){for(var i=0;i<bk.proveedores.length;i++){await sb('proveedores','POST',bk.proveedores[i]);}}
+      await loadAll();
+      loading(false);
+      toast('✅ Backup restaurado correctamente');
+    }catch(err){
+      loading(false);
+      alert('Error al restaurar: '+err.message);
+    }
+  };
+  r.readAsText(file);
+}
+
 function exportData(){
   var blob=new Blob([JSON.stringify({camiones:D.camiones,viajes:D.viajes,tarifas:D.tarifas,clientes:D.clientes,proveedores:D.proveedores},null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='flotacontrol-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();
