@@ -508,10 +508,14 @@ tbody td{padding:10px 14px;vertical-align:middle;}
                   <select id="pdali" onchange="calcIvaPv()">
                     <option value="21">21%</option>
                     <option value="10.5">10.5%</option>
-                    <option value="0">0% / Exento</option>
+                    <option value="0">0%</option>
+                    <option value="exento">Exento</option>
                   </select>
                 </div>
-                <div class="fg"><label>Total con IVA ($)</label><input id="pdtotal" type="number" placeholder="0.00" min="0" style="background:var(--s3);" readonly/></div>
+                <div class="fg"><label>Otros impuestos ($)<br/><small style="font-weight:400;text-transform:none;letter-spacing:0;">IIBB+CO2+ICL</small></label><input id="pdoi" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+              </div>
+              <div class="fr2">
+                <div class="fg"><label>Total final ($)</label><input id="pdtotal" type="number" placeholder="0.00" min="0" style="background:var(--s3);" readonly/></div>
               </div>
               <div class="fr2">
                 <div class="fg"><label>Estado</label><select id="pde"><option>Pendiente</option><option>Pagado</option><option>Anulado</option></select></div>
@@ -845,7 +849,7 @@ async function guardarViaje(){
   var pgl=parseFloat(document.getElementById('vpgl').value)||0;
   var adv=parseFloat(document.getElementById('va').value)||0;
   var obs=document.getElementById('vobs').value.trim();
-  var cliId=(document.getElementById('vcli')&&document.getElementById('vcli').value)?document.getElementById('vcli').value:null;
+  var cliId=document.getElementById('vcli')?document.getElementById('vcli').value:'';
   var gs=getGastos();
   if(!cid){alert('Seleccioná un camión.');return;}
   if(!f){alert('Ingresá la fecha.');return;}
@@ -1315,14 +1319,16 @@ async function addDocP(){
   var fecha=document.getElementById('pdf2').value;
   if(!fecha){alert('Ingresá la fecha.');return;}
   if(!p.docs)p.docs=[];
-  var pali=parseFloat(document.getElementById('pdali').value)||0;
-  var ptotalIva=monto*(1+pali/100);
-  p.docs.push({id:Date.now(),tipo:document.getElementById('pdt').value,num:document.getElementById('pdn').value.trim(),fecha:fecha,monto:monto,ali:pali,totalIva:ptotalIva,estado:document.getElementById('pde').value,desc:document.getElementById('pdd').value.trim()});
+  var aliRaw=document.getElementById('pdali').value;
+  var pali=aliRaw==='exento'?0:(parseFloat(aliRaw)||0);
+  var otrosImp=parseFloat(document.getElementById('pdoi').value)||0;
+  var ptotalIva=monto*(1+pali/100)+otrosImp;
+  p.docs.push({id:Date.now(),tipo:document.getElementById('pdt').value,num:document.getElementById('pdn').value.trim(),fecha:fecha,monto:monto,ali:aliRaw==='exento'?'Exento':pali,otrosImp:otrosImp,totalIva:ptotalIva,estado:document.getElementById('pde').value,desc:document.getElementById('pdd').value.trim()});
   loading(true);
   await sb('proveedores?id=eq.'+p.id,'PATCH',{docs:p.docs});
   loading(false);
   renderDocsPv();
-  ['pdn','pdm','pdd'].forEach(function(id){document.getElementById(id).value='';});
+  ['pdn','pdm','pdd','pdoi'].forEach(function(id){document.getElementById(id).value='';});
   toast('✅ Documento agregado');
 }
 
@@ -1360,11 +1366,14 @@ function renderDocsPv(){
     '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total comprado (c/IVA)</div></div>'+
     '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente pago (c/IVA)</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Total c/IVA</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Otros imp.</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Pagado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
         '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="ta">'+(d.ali==='Exento'?'Exento':(d.ali+'%'))+'</td>'+
+        '<td class="ta">$'+(d.otrosImp||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="ta">$'+(d.totalIva||d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td><select onchange="cambEstadoPv('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
         '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
         '<option value="Pagado"'+(d.estado==='Pagado'?' selected':'')+'>✅ Pagado</option>'+
@@ -1593,8 +1602,10 @@ function calcIvaCli(){
 
 function calcIvaPv(){
   var neto=parseFloat(document.getElementById('pdm').value)||0;
-  var ali=parseFloat(document.getElementById('pdali').value)||0;
-  var total=neto*(1+ali/100);
+  var aliRaw=document.getElementById('pdali').value;
+  var ali=aliRaw==='exento'?0:(parseFloat(aliRaw)||0);
+  var otros=parseFloat(document.getElementById('pdoi').value)||0;
+  var total=neto*(1+ali/100)+otros;
   document.getElementById('pdtotal').value=Math.round(total);
 }
 
