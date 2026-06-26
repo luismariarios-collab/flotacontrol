@@ -512,11 +512,14 @@ tbody td{padding:10px 14px;vertical-align:middle;}
                     <option value="exento">Exento</option>
                   </select>
                 </div>
-                <div class="fg"><label>Monto No Gravado ($)<br/><small style="font-weight:400;text-transform:none;letter-spacing:0;">sin IVA</small></label><input id="pdng" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+                <div class="fg"><label>IVA calculado ($)</label><input id="pdivacalc" type="number" placeholder="0.00" style="background:var(--s3);" readonly/></div>
               </div>
               <div class="fr3">
+                <div class="fg"><label>Monto No Gravado ($)<br/><small style="font-weight:400;text-transform:none;letter-spacing:0;">sin IVA</small></label><input id="pdng" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
                 <div class="fg"><label>Perc. IIBB ($)</label><input id="pdiibb" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
                 <div class="fg"><label>Imp. Dióxido Carbono ($)</label><input id="pdco2" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+              </div>
+              <div class="fr2">
                 <div class="fg"><label>Imp. Combust. Líquidos ($)</label><input id="pdicl" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
               </div>
               <div class="fr2">
@@ -1616,10 +1619,12 @@ function calcIvaPv(){
   var noGrav=parseFloat(document.getElementById('pdng').value)||0;
   var aliRaw=document.getElementById('pdali').value;
   var ali=aliRaw==='exento'?0:(parseFloat(aliRaw)||0);
+  var ivaCalc=grav*(ali/100);
   var iibb=parseFloat(document.getElementById('pdiibb').value)||0;
   var co2=parseFloat(document.getElementById('pdco2').value)||0;
   var icl=parseFloat(document.getElementById('pdicl').value)||0;
-  var total=grav*(1+ali/100)+noGrav+iibb+co2+icl;
+  var total=grav+ivaCalc+noGrav+iibb+co2+icl;
+  document.getElementById('pdivacalc').value=ivaCalc.toFixed(2);
   document.getElementById('pdtotal').value=Math.round(total);
 }
 
