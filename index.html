@@ -503,7 +503,7 @@ tbody td{padding:10px 14px;vertical-align:middle;}
                 <div class="fg"><label>Fecha</label><input id="pdf2" type="date"/></div>
               </div>
               <div class="fr3">
-                <div class="fg"><label>Monto neto ($)</label><input id="pdm" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+                <div class="fg"><label>Monto Gravado ($)<br/><small style="font-weight:400;text-transform:none;letter-spacing:0;">paga IVA</small></label><input id="pdm" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
                 <div class="fg"><label>Alícuota IVA</label>
                   <select id="pdali" onchange="calcIvaPv()">
                     <option value="21">21%</option>
@@ -512,7 +512,12 @@ tbody td{padding:10px 14px;vertical-align:middle;}
                     <option value="exento">Exento</option>
                   </select>
                 </div>
-                <div class="fg"><label>Otros impuestos ($)<br/><small style="font-weight:400;text-transform:none;letter-spacing:0;">IIBB+CO2+ICL</small></label><input id="pdoi" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+                <div class="fg"><label>Monto No Gravado ($)<br/><small style="font-weight:400;text-transform:none;letter-spacing:0;">sin IVA</small></label><input id="pdng" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+              </div>
+              <div class="fr3">
+                <div class="fg"><label>Perc. IIBB ($)</label><input id="pdiibb" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+                <div class="fg"><label>Imp. Dióxido Carbono ($)</label><input id="pdco2" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
+                <div class="fg"><label>Imp. Combust. Líquidos ($)</label><input id="pdicl" type="number" placeholder="0.00" min="0" oninput="calcIvaPv()"/></div>
               </div>
               <div class="fr2">
                 <div class="fg"><label>Total final ($)</label><input id="pdtotal" type="number" placeholder="0.00" min="0" style="background:var(--s3);" readonly/></div>
@@ -1316,19 +1321,22 @@ async function addDocP(){
   var p=D.proveedores.find(function(x){return x.id===pvActivo;});
   if(!p)return;
   var monto=parseFloat(document.getElementById('pdm').value)||0;
+  var noGrav=parseFloat(document.getElementById('pdng').value)||0;
   var fecha=document.getElementById('pdf2').value;
   if(!fecha){alert('Ingresá la fecha.');return;}
   if(!p.docs)p.docs=[];
   var aliRaw=document.getElementById('pdali').value;
   var pali=aliRaw==='exento'?0:(parseFloat(aliRaw)||0);
-  var otrosImp=parseFloat(document.getElementById('pdoi').value)||0;
-  var ptotalIva=monto*(1+pali/100)+otrosImp;
-  p.docs.push({id:Date.now(),tipo:document.getElementById('pdt').value,num:document.getElementById('pdn').value.trim(),fecha:fecha,monto:monto,ali:aliRaw==='exento'?'Exento':pali,otrosImp:otrosImp,totalIva:ptotalIva,estado:document.getElementById('pde').value,desc:document.getElementById('pdd').value.trim()});
+  var iibb=parseFloat(document.getElementById('pdiibb').value)||0;
+  var co2=parseFloat(document.getElementById('pdco2').value)||0;
+  var icl=parseFloat(document.getElementById('pdicl').value)||0;
+  var ptotalIva=monto*(1+pali/100)+noGrav+iibb+co2+icl;
+  p.docs.push({id:Date.now(),tipo:document.getElementById('pdt').value,num:document.getElementById('pdn').value.trim(),fecha:fecha,monto:monto,noGrav:noGrav,ali:aliRaw==='exento'?'Exento':pali,iibb:iibb,co2:co2,icl:icl,totalIva:ptotalIva,estado:document.getElementById('pde').value,desc:document.getElementById('pdd').value.trim()});
   loading(true);
   await sb('proveedores?id=eq.'+p.id,'PATCH',{docs:p.docs});
   loading(false);
   renderDocsPv();
-  ['pdn','pdm','pdd','pdoi'].forEach(function(id){document.getElementById(id).value='';});
+  ['pdn','pdm','pdd','pdng','pdiibb','pdco2','pdicl'].forEach(function(id){document.getElementById(id).value='';});
   toast('✅ Documento agregado');
 }
 
@@ -1366,13 +1374,16 @@ function renderDocsPv(){
     '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total comprado (c/IVA)</div></div>'+
     '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente pago (c/IVA)</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Otros imp.</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Gravado</th><th>IVA%</th><th>No Grav.</th><th>IIBB</th><th>CO2</th><th>ICL</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Pagado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
         '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td class="ta">'+(d.ali==='Exento'?'Exento':(d.ali+'%'))+'</td>'+
-        '<td class="ta">$'+(d.otrosImp||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="ta">$'+(d.noGrav||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="ta">$'+(d.iibb||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="ta">$'+(d.co2||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="ta">$'+(d.icl||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td class="ta">$'+(d.totalIva||d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td><select onchange="cambEstadoPv('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
         '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
@@ -1601,11 +1612,14 @@ function calcIvaCli(){
 }
 
 function calcIvaPv(){
-  var neto=parseFloat(document.getElementById('pdm').value)||0;
+  var grav=parseFloat(document.getElementById('pdm').value)||0;
+  var noGrav=parseFloat(document.getElementById('pdng').value)||0;
   var aliRaw=document.getElementById('pdali').value;
   var ali=aliRaw==='exento'?0:(parseFloat(aliRaw)||0);
-  var otros=parseFloat(document.getElementById('pdoi').value)||0;
-  var total=neto*(1+ali/100)+otros;
+  var iibb=parseFloat(document.getElementById('pdiibb').value)||0;
+  var co2=parseFloat(document.getElementById('pdco2').value)||0;
+  var icl=parseFloat(document.getElementById('pdicl').value)||0;
+  var total=grav*(1+ali/100)+noGrav+iibb+co2+icl;
   document.getElementById('pdtotal').value=Math.round(total);
 }
 
