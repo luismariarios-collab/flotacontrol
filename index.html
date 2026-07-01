@@ -726,8 +726,10 @@ function syncClientes(){
   ['vcli','fvcli'].forEach(function(id){
     var el=document.getElementById(id);
     if(!el)return;
+    var cur=el.value;
     var pre=id==='fvcli'?'<option value="">Todos</option>':'<option value="">— Sin cliente —</option>';
     el.innerHTML=pre+ocli;
+    if(cur)el.value=cur;
   });
 }
 function syncSels(){
@@ -735,11 +737,11 @@ function syncSels(){
   ['vc','fvc','lqc','ic'].forEach(function(id){
     var el=document.getElementById(id);
     if(!el)return;
+    var cur=el.value; // guardar selección actual
     var pre=id==='fvc'||id==='ic'?'<option value="">Todos</option>':'<option value="">— Seleccionar —</option>';
     el.innerHTML=pre+o;
+    if(cur)el.value=cur; // restaurar selección
   });
-  // clientes sync handled by syncClientes()
-
 }
 
 // ==================== CAMIONES ====================
@@ -932,18 +934,6 @@ function editViaje(id){
 }
 
 function tvTot(v){return ((v.gs||[]).reduce(function(s,g){return s+g.monto;},0))+(v.adv||0);}
-function docTot(d){
-  // Si tiene totalIva guardado y es mayor a 0, usarlo
-  if(d.totalIva&&d.totalIva>0)return d.totalIva;
-  // Sino recalcular desde los campos
-  var grav=d.monto||0;
-  var ali=d.ali==='Exento'?0:(parseFloat(d.ali)||0);
-  var noGrav=d.noGrav||0;
-  var iibb=d.iibb||0;
-  var co2=d.co2||0;
-  var icl=d.icl||0;
-  return grav*(1+ali/100)+noGrav+iibb+co2+icl;
-}
 var TICO={Peaje:'🛣️','Viáticos':'🍽️','Neumáticos':'🔵',Reparación:'🔧',Estadía:'🏨',Comida:'🥗',Otro:'📦'};
 var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -1384,8 +1374,8 @@ function renderDocsPv(){
   var docs=(p.docs||[]).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
   if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos.</div>';return;}
   var esRecibo=function(d){return d.tipo==='Recibo'||d.tipo==='Recibo de pago';};
-  var totalFacturado=docs.filter(function(d){return !esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+docTot(d);},0);
-  var totalPagado=docs.filter(function(d){return esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+docTot(d);},0);
+  var totalFacturado=docs.filter(function(d){return !esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
+  var totalPagado=docs.filter(function(d){return esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
   var saldoDeuda=totalFacturado-totalPagado;
   var saldoColor=saldoDeuda>0?'var(--red)':'var(--green)';
   var saldoLabel=saldoDeuda>0?'Saldo a pagar':'Saldo a favor';
@@ -1407,7 +1397,7 @@ function renderDocsPv(){
         '<td class="ta">$'+(d.iibb||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td class="ta">$'+(d.co2||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td class="ta">$'+(d.icl||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
-        '<td class="ta">$'+docTot(d).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="ta">$'+(d.totalIva||d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td style="color:'+cargoColor+';font-weight:600;font-size:.82rem">'+cargoLabel+'</td>'+
         '<td><select onchange="cambEstadoPv('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
         '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
