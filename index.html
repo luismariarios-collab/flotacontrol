@@ -428,7 +428,7 @@ tbody td{padding:10px 14px;vertical-align:middle;}
             <div class="card" id="dcli" style="margin-bottom:12px"></div>
             <div class="card">
               <div class="ct">Nuevo documento</div>
-              <div class="fg"><label>Tipo</label><select id="dt"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Presupuesto</option><option>Otro</option><option disabled>── Pagos ──</option><option>Recibo</option><option>Recibo de pago</option></select></div>
+              <div class="fg"><label>Tipo</label><select id="dt"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Recibo</option><option>Presupuesto</option><option>Otro</option></select></div>
               <div class="fr2">
                 <div class="fg"><label>Número</label><input id="dn" type="text" placeholder="0001-00012345"/></div>
                 <div class="fg"><label>Fecha</label><input id="dfe" type="date"/></div>
@@ -497,7 +497,7 @@ tbody td{padding:10px 14px;vertical-align:middle;}
             <div class="card" id="dpvi" style="margin-bottom:12px"></div>
             <div class="card">
               <div class="ct">Nueva compra / documento</div>
-              <div class="fg"><label>Tipo</label><select id="pdt"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Recibo</option><option>Ticket</option><option>Otro</option></select></div>
+              <div class="fg"><label>Tipo</label><select id="pdt"><option>Factura A</option><option>Factura B</option><option>Factura C</option><option>Remito</option><option>Ticket</option><option>Otro</option><option disabled>── Pagos ──</option><option>Recibo</option><option>Recibo de pago</option></select></div>
               <div class="fr2">
                 <div class="fg"><label>Número</label><input id="pdn" type="text" placeholder="0001-00012345"/></div>
                 <div class="fg"><label>Fecha</label><input id="pdf2" type="date"/></div>
@@ -1240,26 +1240,17 @@ function renderDocsCl(){
   if(!c||!el)return;
   var docs=(c.docs||[]).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
   if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos.</div>';return;}
-  var esRecibo=function(d){return d.tipo==='Recibo'||d.tipo==='Recibo de pago';};
-  var totalFacturado=docs.filter(function(d){return !esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
-  var totalPagado=docs.filter(function(d){return esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
-  var saldoDeuda=totalFacturado-totalPagado;
-  var saldoColor=saldoDeuda>0?'var(--red)':'var(--green)';
-  var saldoLabel=saldoDeuda>0?'Saldo a cobrar':'Saldo a favor cliente';
-  el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr 1fr">'+
-    '<div class="sc"><div class="sv">$'+abr(totalFacturado)+'</div><div class="sl">Total facturado</div></div>'+
-    '<div class="sc green"><div class="sv">$'+abr(totalPagado)+'</div><div class="sl">Total cobrado</div></div>'+
-    '<div class="sc" style="border-color:'+saldoColor+'"><div class="sv" style="color:'+saldoColor+'">$'+abr(Math.abs(saldoDeuda))+'</div><div class="sl">'+saldoLabel+'</div></div>'+
+  var tot=docs.reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
+  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
+  el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">'+
+    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total facturado (c/IVA)</div></div>'+
+    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente cobro (c/IVA)</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Monto</th><th>Cargo/Pago</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Neto</th><th>IVA%</th><th>Total c/IVA</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Cobrado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
-      var esPago=esRecibo(d);
-      var cargoColor=esPago?'var(--green)':'var(--red)';
-      var cargoLabel=esPago?'✅ Pago':'📄 Cargo';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
-        '<td class="ta">$'+(d.totalIva||d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
-        '<td style="color:'+cargoColor+';font-weight:600;font-size:.82rem">'+cargoLabel+'</td>'+
+        '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td><select onchange="cambEstadoCl('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
         '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
         '<option value="Cobrado"'+(d.estado==='Cobrado'?' selected':'')+'>✅ Cobrado</option>'+
@@ -1380,15 +1371,23 @@ function renderDocsPv(){
   if(!p||!el)return;
   var docs=(p.docs||[]).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
   if(!docs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div>Sin documentos.</div>';return;}
-  var tot=docs.reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
-  var pend=docs.filter(function(d){return d.estado==='Pendiente';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
-  el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">'+
-    '<div class="sc"><div class="sv">$'+abr(tot)+'</div><div class="sl">Total comprado (c/IVA)</div></div>'+
-    '<div class="sc yellow"><div class="sv">$'+abr(pend)+'</div><div class="sl">Pendiente pago (c/IVA)</div></div>'+
+  var esRecibo=function(d){return d.tipo==='Recibo'||d.tipo==='Recibo de pago';};
+  var totalFacturado=docs.filter(function(d){return !esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
+  var totalPagado=docs.filter(function(d){return esRecibo(d)&&d.estado!=='Anulado';}).reduce(function(s,d){return s+(d.totalIva||d.monto||0);},0);
+  var saldoDeuda=totalFacturado-totalPagado;
+  var saldoColor=saldoDeuda>0?'var(--red)':'var(--green)';
+  var saldoLabel=saldoDeuda>0?'Saldo a pagar':'Saldo a favor';
+  el.innerHTML='<div class="sg" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr 1fr">'+
+    '<div class="sc"><div class="sv">$'+abr(totalFacturado)+'</div><div class="sl">Total comprado</div></div>'+
+    '<div class="sc green"><div class="sv">$'+abr(totalPagado)+'</div><div class="sl">Total pagado</div></div>'+
+    '<div class="sc" style="border-color:'+saldoColor+'"><div class="sv" style="color:'+saldoColor+'">$'+abr(Math.abs(saldoDeuda))+'</div><div class="sl">'+saldoLabel+'</div></div>'+
     '<div class="sc blue"><div class="sv">'+docs.length+'</div><div class="sl">Documentos</div></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Gravado</th><th>IVA%</th><th>No Grav.</th><th>IIBB</th><th>CO2</th><th>ICL</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    '<div class="tw"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Número</th><th>Descripción</th><th>Gravado</th><th>IVA%</th><th>No Grav.</th><th>IIBB</th><th>CO2</th><th>ICL</th><th>Total</th><th>Cargo/Pago</th><th>Estado</th><th></th></tr></thead><tbody>'+
     docs.map(function(d){
       var sc=d.estado==='Pagado'?'var(--green)':d.estado==='Pendiente'?'var(--yellow)':'var(--dim)';
+      var esPago=esRecibo(d);
+      var cargoColor=esPago?'var(--green)':'var(--red)';
+      var cargoLabel=esPago?'✅ Pago':'📄 Cargo';
       return '<tr><td class="td">'+fmt(d.fecha)+'</td><td>'+d.tipo+'</td><td class="td">'+(d.num||'—')+'</td><td class="td">'+(d.desc||'—')+'</td>'+
         '<td class="ta">$'+(d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td class="ta">'+(d.ali==='Exento'?'Exento':(d.ali+'%'))+'</td>'+
@@ -1397,6 +1396,7 @@ function renderDocsPv(){
         '<td class="ta">$'+(d.co2||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td class="ta">$'+(d.icl||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
         '<td class="ta">$'+(d.totalIva||d.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td style="color:'+cargoColor+';font-weight:600;font-size:.82rem">'+cargoLabel+'</td>'+
         '<td><select onchange="cambEstadoPv('+d.id+',this.value)" style="background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;color:'+sc+';font-size:.8rem;font-weight:600;outline:none;cursor:pointer;">'+
         '<option value="Pendiente"'+(d.estado==='Pendiente'?' selected':'')+'>🟡 Pendiente</option>'+
         '<option value="Pagado"'+(d.estado==='Pagado'?' selected':'')+'>✅ Pagado</option>'+
